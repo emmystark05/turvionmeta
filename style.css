@@ -34,7 +34,7 @@
 html, body {
   height: 100%;
   font-family: 'DM Sans', sans-serif;
-  background: var(--bg-dark);
+  background: white;
   color: var(--text-main);
   -webkit-font-smoothing: antialiased;
 }
@@ -778,6 +778,10 @@ html, body {
 }
 
 @media (max-width: 600px) {
+  body {
+    padding-left: 15px;
+    padding-bottom: 0px;
+  }
   .panel-left {
     padding: 24px 20px 20px;
     min-height: 280px;
@@ -789,6 +793,7 @@ html, body {
   .nav-tlogo{
   position: relative;
   right: 0px;
+  color: black;
 }
   .brand .brand-name img {
     width: 120px;

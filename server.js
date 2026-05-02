@@ -144,6 +144,15 @@ app.use(session({
 
 // ─── Database (untouched) ─────────────────────────────────────────────────────
 
+
+// ─── Database ─────────────────────────────────────────────────────────────────
+const sqlite3 = require('sqlite3').verbose();
+const db = new sqlite3.Database(path.join(__dirname, 'app.db'), (err) => {
+  if (err) { console.error('Database connection failed:', err); }
+  else     { console.log('✓ Connected to SQLite database'); initializeDatabase(); }
+});
+
+
 function initializeDatabase() {
   db.serialize(() => {
     db.run(`

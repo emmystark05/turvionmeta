@@ -442,7 +442,7 @@
   <span class="admbadge">ADMIN</span>
   <div class="nav-r">
     <span class="nclock" id="clock">--:--:--</span>
-    <button class="sound-btn" id="soundBtn" onclick="toggleSound()" title="Toggle notification sound">🔔 Sound</button>
+    <button class="sound-btn" id="soundBtn" onclick="toggleSound()" title="Toggle notification sound"> Sound</button>
     <div class="ava">AD</div>
     <a href="./admin-login.html" style="font-family:var(--mono);font-size:11px;color:var(--muted);text-decoration:none;cursor:pointer;" onclick="logout()">Logout</a>
   </div>
@@ -637,7 +637,7 @@
 
   function toggleSound() {
     soundEnabled = !soundEnabled;
-    document.getElementById('soundBtn').textContent = soundEnabled ? '🔔 Sound' : '🔕 Muted';
+    document.getElementById('soundBtn').textContent = soundEnabled ? ' Sound' : ' Muted';
   }
 
   // ════════════════════════════════════════════════════════════════
@@ -864,7 +864,7 @@
 
     if (session.status === 'resolved') {
       const b = document.createElement('div'); b.className = 'adm-resolved-banner';
-      b.textContent = '✅ Conversation resolved.';
+      b.textContent = ' Conversation resolved.';
       box.appendChild(b);
     }
 
@@ -881,7 +881,7 @@
     });
     if (session.status === 'resolved' && !document.querySelector('.adm-resolved-banner')) {
       const b = document.createElement('div'); b.className = 'adm-resolved-banner';
-      b.textContent = '✅ Conversation resolved.';
+      b.textContent = ' Conversation resolved.';
       document.getElementById('adminChatMessages').appendChild(b);
       document.getElementById('resolveBtn').disabled = true;
       document.getElementById('resolveBtn').textContent = '✓ Resolved';

@@ -366,7 +366,7 @@ app.use((err, req, res, next) => {
 
 // ─── Start — use server.listen (NOT app.listen) ────────────────────────────
 server.listen(PORT, () => {
-  console.log(`\n✅ TurvionMeta running on http://localhost:${PORT}`);
+  console.log(`\n TurvionMeta running on http://localhost:${PORT}`);
   console.log('✓ Admin credentials: admin@stark / stark');
   console.log('✓ Socket.io chat: enabled');
   console.log(`✓ Database: app.db\n`);

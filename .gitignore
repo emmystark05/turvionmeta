@@ -1,1 +1,11 @@
 .vercel
+/node_modules
+/app.db
+/logs
+*.log
+*.sqlite
+*.sqlite3
+.DS_Store
+.env
+.env.local
+.env.development

@@ -146,70 +146,67 @@ app.use(session({
 
 
 // ─── Database ─────────────────────────────────────────────────────────────────
-const sqlite3 = require('sqlite3').verbose();
-const db = new sqlite3.Database(path.join(__dirname, 'app.db'), (err) => {
-  if (err) { console.error('Database connection failed:', err); }
-  else     { console.log('✓ Connected to SQLite database'); initializeDatabase(); }
-});
-
+const Database = require('better-sqlite3');
+const db = new Database(path.join(__dirname, 'app.db'));
+console.log('✓ Connected to SQLite database');
+initializeDatabase();
 
 function initializeDatabase() {
-  db.serialize(() => {
-    db.run(`
-      CREATE TABLE IF NOT EXISTS users (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        fullName TEXT NOT NULL,
-        email TEXT UNIQUE NOT NULL,
-        phone TEXT,
-        password TEXT NOT NULL,
-        isAdmin BOOLEAN DEFAULT 0,
-        status TEXT DEFAULT 'active',
-        createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
-        updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP
-      )
-    `, (err) => { if (!err) console.log('✓ Users table ready'); });
+  db.prepare(`CREATE TABLE IF NOT EXISTS users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    fullName TEXT NOT NULL,
+    email TEXT UNIQUE NOT NULL,
+    phone TEXT,
+    password TEXT NOT NULL,
+    isAdmin BOOLEAN DEFAULT 0,
+    status TEXT DEFAULT 'active',
+    createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP
+  )`).run();
+  console.log('✓ Users table ready');
 
-    db.run(`
-      CREATE TABLE IF NOT EXISTS portfolio (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        userId INTEGER UNIQUE NOT NULL,
-        BTC REAL DEFAULT 0, ETH REAL DEFAULT 0, USDT REAL DEFAULT 0,
-        BNB REAL DEFAULT 0, SOL REAL DEFAULT 0, XRP REAL DEFAULT 0,
-        ADA REAL DEFAULT 0, DOGE REAL DEFAULT 0, AVAX REAL DEFAULT 0,
-        LINK REAL DEFAULT 0, totalValue REAL DEFAULT 0,
-        updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE
-      )
-    `, (err) => { if (!err) console.log('✓ Portfolio table ready'); });
+  db.prepare(`CREATE TABLE IF NOT EXISTS portfolio (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    userId INTEGER UNIQUE NOT NULL,
+    BTC REAL DEFAULT 0, ETH REAL DEFAULT 0, USDT REAL DEFAULT 0,
+    BNB REAL DEFAULT 0, SOL REAL DEFAULT 0, XRP REAL DEFAULT 0,
+    ADA REAL DEFAULT 0, DOGE REAL DEFAULT 0, AVAX REAL DEFAULT 0,
+    LINK REAL DEFAULT 0, totalValue REAL DEFAULT 0,
+    updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE
+  )`).run();
+  console.log('✓ Portfolio table ready');
 
-    const adminEmail = 'admin@stark', adminPassword = 'stark';
-    db.get('SELECT id FROM users WHERE email = ?', [adminEmail], (err, row) => {
-      if (!row) {
-        const hp = bcrypt.hashSync(adminPassword, 10);
-        db.run(
-          `INSERT INTO users (fullName, email, phone, password, isAdmin, status) VALUES (?, ?, ?, ?, ?, ?)`,
-          ['Admin User', adminEmail, '+1234567890', hp, 1, 'active'],
-          function(err) {
-            if (!err) {
-              db.run(`INSERT INTO portfolio (userId) VALUES (?)`, [this.lastID], (err) => {
-                if (!err) console.log('✓ Admin user created');
-              });
-            }
-          }
-        );
-      }
-    });
-  });
+  const adminEmail = 'admin@stark', adminPassword = 'stark';
+  const existing = db.prepare('SELECT id FROM users WHERE email = ?').get(adminEmail);
+  if (!existing) {
+    const hp = bcrypt.hashSync(adminPassword, 10);
+    const result = db.prepare(
+      `INSERT INTO users (fullName, email, phone, password, isAdmin, status) VALUES (?, ?, ?, ?, ?, ?)`
+    ).run('Admin User', adminEmail, '+1234567890', hp, 1, 'active');
+    db.prepare(`INSERT INTO portfolio (userId) VALUES (?)`).run(result.lastInsertRowid);
+    console.log('✓ Admin user created');
+  }
 }
 
 function dbRun(q, p = []) {
-  return new Promise((res, rej) => db.run(q, p, function(e) { e ? rej(e) : res({ id: this.lastID, changes: this.changes }); }));
+  try {
+    const stmt = db.prepare(q);
+    const result = stmt.run(...p);
+    return Promise.resolve({ id: result.lastInsertRowid, changes: result.changes });
+  } catch(e) { return Promise.reject(e); }
 }
 function dbGet(q, p = []) {
-  return new Promise((res, rej) => db.get(q, p, (e, r) => e ? rej(e) : res(r)));
+  try {
+    const stmt = db.prepare(q);
+    return Promise.resolve(stmt.get(...p));
+  } catch(e) { return Promise.reject(e); }
 }
 function dbAll(q, p = []) {
-  return new Promise((res, rej) => db.all(q, p, (e, r) => e ? rej(e) : res(r)));
+  try {
+    const stmt = db.prepare(q);
+    return Promise.resolve(stmt.all(...p));
+  } catch(e) { return Promise.reject(e); }
 }
 
 // ─── Auth Middleware (untouched) ──────────────────────────────────────────────

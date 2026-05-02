@@ -1,10 +1,10 @@
 const express = require('express');
 const cors = require('cors');
 const session = require('express-session');
+const path = require('path');
 const Database = require('better-sqlite3');
 const db = new Database(path.join(__dirname, 'app.db'));
 const bcrypt = require('bcryptjs');
-const path = require('path');
 const http = require('http');             // NEW
 const { Server } = require('socket.io'); // NEW  →  npm install socket.io
 const { v4: uuidv4 } = require('uuid'); // NEW  →  npm install uuid

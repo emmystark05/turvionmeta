@@ -1,0 +1,845 @@
+/* =========================================
+   TRADEFLEX LOGIN PAGE  style.css
+   ========================================= */
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --red:        #ff444f;
+  --red-dark:   #d62b35;
+  --bg-dark:    #0d0f14;
+  --bg-panel:   #13161e;
+  --white:      #ffffff;
+  --off-white:  white;
+  --gray-100:   #f0f0f2;
+  --gray-300:   #d1d1d6;
+  --gray-500:   #8e8e99;
+  --gray-700:   #3a3a44;
+  --text-main:  #1a1a2e;
+  --shadow:     0 4px 24px rgba(0,0,0,.12);
+  --radius-lg:  16px;
+  --radius-md:  12px;
+  --radius-sm:  8px;
+  --transition: .3s cubic-bezier(.4,0,.2,1);
+}
+
+ .meta {
+    color: var(--red);
+  }
+
+html, body {
+  height: 100%;
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg-dark);
+  color: var(--text-main);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── MOBILE NAVIGATION ────────────────────── */
+.mobile-nav {
+  display: none;
+  position: sticky;
+  top: 0;
+  padding-top: 150px;
+  z-index: 1000;
+  background: white;
+  /* background-color: rgba(255, 255, 255, 0.3); 
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.532); */
+  padding: 1px 34px;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.image {
+  width: 120px;
+  height: 55px;
+  margin-left: -20px;
+  object-fit: contain;
+}
+
+.nav-brand {
+  display: flex;
+  align-items: center;
+}
+
+.nav-logo {
+  font-family: Raleway, sans-serif;
+  font-weight: 800;
+  font-size: 30px;
+  color: black;
+  letter-spacing: -0.5px;
+  top: 50px;
+  position: relative;
+}
+
+.hamburger {
+  display: none;
+  flex-direction: column;
+  width: 24px;
+  height: 24px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  gap: 5px;
+}
+
+.hamburger span {
+  width: 100%;
+  height: 2px;
+  background: black;
+  border-radius: 1px;
+  transition: all 0.3s ease;
+  display: block;
+}
+
+.hamburger.active span:nth-child(1) {
+  transform: rotate(45deg) translate(10px, 10px);
+}
+
+.hamburger.active span:nth-child(2) {
+  opacity: 0;
+}
+
+.hamburger.active span:nth-child(3) {
+  transform: rotate(-45deg) translate(7px, -7px);
+}
+
+.mobile-menu {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: var(--bg-panel);
+  border-bottom: 1px solid rgba(255,255,255,.05);
+  flex-direction: column;
+  gap: 0;
+}
+
+.mobile-menu.active {
+  display: flex;
+}
+
+.menu-item {
+  padding: 14px 20px;
+  color: rgba(255,255,255,.7);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  border-bottom: 1px solid rgba(255,255,255,.05);
+  transition: all 0.3s ease;
+}
+
+.menu-item:hover,
+.menu-item.active {
+  color: var(--red);
+  background: rgba(255,68,79,.05);
+}
+
+/* ── LAYOUT ─────────────────────────────── */
+.layout {
+  display: flex;
+  min-height: 100vh;
+  width: 100%;
+}
+
+/* ── LEFT PANEL ──────────────────────────── */
+.panel-left {
+  position: relative;
+  flex: 0 0 50%;
+  background: var(--bg-dark);
+  display: flex;
+  flex-direction: column;
+  padding: 36px 48px 36px;
+  overflow: hidden;
+  min-height: 100vh;
+}
+
+.brand {
+  position: relative;
+  z-index: 10;
+}
+
+.brand-name {
+  font-family: Raleway, sans-serif;
+  font-weight: 800;
+  font-size: 29px;
+  color: white;
+  letter-spacing: -0.5px;
+}
+
+/* ── SLIDES ──────────────────────────────── */
+.slides {
+  position: relative;
+  flex: 1;
+  display: flex;
+  align-items: center;
+}
+
+.slide {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity .6s ease, transform .6s ease;
+  pointer-events: none;
+}
+
+.nav-tlogo{
+  position: relative;
+  right: 29px;
+}
+
+.slide.active {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.slide-visual {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.slide-text h2 {
+  font-family: Raleway, sans-serif;
+  font-weight: 700;
+  font-size: clamp(22px, 2.8vw, 34px);
+  color: var(--white);
+  line-height: 1.25;
+  margin-bottom: 8px;
+}
+
+/* ── INDICATORS ─────────────────────────── */
+.indicators {
+  display: flex;
+  gap: 8px;
+  padding-bottom: 8px;
+  position: relative;
+  z-index: 10;
+}
+
+.dot {
+  width: 52px;
+  height: 4px;
+  border-radius: 2px;
+  border: none;
+  cursor: pointer;
+  background: rgba(255,255,255,.25);
+  transition: background var(--transition), width var(--transition);
+  padding: 0;
+}
+
+.dot.active {
+  background: var(--red);
+  width: 64px;
+}
+
+.brand-name-footer {
+  font-family: Raleway, sans-serif;
+  font-weight: 800;
+  font-size: 24px;
+  color: white;
+  letter-spacing: -0.5px;
+  margin-right: 30px;
+}
+
+/* ── RIGHT PANEL ──────────────────────────── */
+.panel-right {
+  flex: 0 0 50%;
+  background: var(--off-white);
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  position: relative;
+}
+
+.top-bar {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 10px;
+  padding: 40px 0px;
+}
+
+.lang-btn, .chat-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--gray-300);
+  background: var(--white);
+  border-radius: 20px;
+  padding: 8px 14px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-main);
+  cursor: pointer;
+  transition: border-color var(--transition), box-shadow var(--transition);
+}
+
+.chat-btn {
+  padding: 9px 12px;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  justify-content: center;
+}
+
+.lang-btn:hover, .chat-btn:hover {
+  border-color: var(--gray-500);
+  box-shadow: var(--shadow);
+}
+
+/* ── FORM ──────────────────────────────── */
+.form-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 20px 80px 60px;
+  max-width: 520px;
+  width: 100%;
+  margin: 0 auto;
+}
+.form-container1 {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 20px 80px 60px;
+  max-width: 520px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.welcome-title {
+  font-family: Raleway, sans-serif;
+  font-weight: 800;
+  font-size: clamp(40px, 10vw, 40px);
+  color: var(--text-main);
+  margin-bottom: 32px;
+  line-height: 1.15;
+}
+
+.social-btns {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.social-btn {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  padding: 14px 20px;
+  border-radius: var(--radius-md);
+  border: 1.5px solid var(--gray-300);
+  background: var(--white);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-main);
+  cursor: pointer;
+  transition: border-color var(--transition), box-shadow var(--transition), transform var(--transition);
+}
+
+.social-btn:hover {
+  border-color: var(--gray-500);
+  box-shadow: 0 4px 16px rgba(0,0,0,.08);
+  transform: translateY(-1px);
+}
+
+.social-btn:active {
+  transform: translateY(0);
+}
+
+/* ── DIVIDER ─────────────────────────────── */
+.divider {
+  position: relative;
+  text-align: center;
+  margin: 20px 0;
+}
+
+.divider::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: var(--gray-300);
+}
+
+.divider span {
+  position: relative;
+  background: var(--off-white);
+  padding: 0 14px;
+  color: var(--gray-500);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+/* ── INPUT ───────────────────────────────── */
+.input-group {
+  margin-bottom: 24px;
+}
+
+.input-group label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-main);
+  margin-bottom: 8px;
+  letter-spacing: .01em;
+}
+
+.input-group input {
+  width: 100%;
+  padding: 14px 16px;
+  border-radius: var(--radius-md);
+  border: 1.5px solid var(--gray-300);
+  background: var(--white);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 15px;
+  color: var(--text-main);
+  outline: none;
+  transition: border-color var(--transition), box-shadow var(--transition);
+}
+
+.input-group input::placeholder {
+  color: var(--gray-300);
+}
+
+.input-group input:focus {
+  border-color: var(--red);
+  box-shadow: 0 0 0 3px rgba(255, 68, 79, .12);
+}
+
+/* ── CHECKBOX ───────────────────────────── */
+.input-group.checkbox {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 24px;
+}
+
+.input-group.checkbox input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  margin-top: 2px;
+  cursor: pointer;
+  accent-color: var(--red);
+}
+
+.input-group.checkbox label {
+  margin-bottom: 0;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.input-group.checkbox a {
+  color: var(--red);
+  text-decoration: none;
+  transition: text-decoration var(--transition);
+}
+
+.input-group.checkbox a:hover {
+  text-decoration: underline;
+}
+
+/* ── LOGIN BTN ────────────────────────────── */
+.login-btn {
+  width: 100%;
+  padding: 16px;
+  border-radius: 50px;
+  border: none;
+  background: var(--red);
+  color: var(--white);
+  font-family: Raleway, sans-serif;
+  font-weight: 700;
+  font-size: 16px;
+  cursor: pointer;
+  letter-spacing: .02em;
+  transition: background var(--transition), transform var(--transition), box-shadow var(--transition);
+  margin-bottom: 20px;
+}
+
+.login-btn:hover {
+  background: var(--red-dark);
+  box-shadow: 0 8px 24px rgba(255, 68, 79, .35);
+  transform: translateY(-2px);
+}
+
+.login-btn:active {
+  transform: translateY(0);
+  box-shadow: none;
+}
+
+/* ── SIGNUP PROMPT ─────────────────────────── */
+.signup-prompt {
+  text-align: center;
+  font-size: 14px;
+  color: var(--gray-500);
+}
+
+.signup-prompt a {
+  color: var(--text-main);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  transition: color var(--transition);
+}
+
+.signup-prompt a:hover {
+  color: var(--red);
+}
+
+/* ══════════════════════════════════════════
+   SLIDE VISUALS
+══════════════════════════════════════════ */
+
+.abstract-shape {
+  position: relative;
+  width: 320px;
+  height: 320px;
+}
+
+/* ── Slide 1: Person / Steps ─────────────── */
+.shape-person {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.bg-steps {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 60%;
+  background: repeating-linear-gradient(
+    to top,
+    rgba(255,255,255,.04) 0px,
+    rgba(255,255,255,.04) 28px,
+    transparent 28px,
+    transparent 56px
+  );
+  border-radius: var(--radius-lg);
+}
+
+.figure {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.figure-head {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: #c8a882;
+  border: 3px solid rgba(255,255,255,.15);
+}
+
+.figure-body {
+  width: 80px;
+  height: 100px;
+  border-radius: 16px 16px 8px 8px;
+  background: #5a5a6a;
+}
+
+.figure-phone {
+  position: absolute;
+  right: -36px;
+  top: 40px;
+  width: 52px;
+  height: 90px;
+  background: #1a1a2a;
+  border-radius: 10px;
+  border: 2px solid rgba(255,255,255,.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 32px rgba(0,0,0,.4);
+}
+
+.phone-screen {
+  width: 36px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.screen-line {
+  height: 4px;
+  border-radius: 2px;
+  background: var(--red);
+  opacity: .8;
+}
+
+.screen-line.short { width: 60%; }
+
+/* ── Slide 2: Wallet ─────────────────────── */
+.shape-wallet {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  position: relative;
+}
+
+.wallet-card {
+  width: 220px;
+  padding: 14px 18px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-family: Raleway, sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--white);
+  box-shadow: 0 8px 24px rgba(0,0,0,.3);
+}
+
+.card1 {
+  background: linear-gradient(135deg, #e05c40, #e88b30);
+  z-index: 2;
+}
+
+.card2 {
+  background: linear-gradient(135deg, #6c3fc5, #9b5de5);
+  z-index: 3;
+  transform: translateY(-8px);
+}
+
+.card-chip {
+  width: 28px;
+  height: 20px;
+  background: rgba(255,255,255,.3);
+  border-radius: 4px;
+}
+
+.card-stripe {
+  width: 36px;
+  height: 4px;
+  background: rgba(255,255,255,.4);
+  border-radius: 2px;
+}
+
+.phone-mock {
+  background: var(--white);
+  border-radius: 16px;
+  padding: 14px 16px;
+  width: 220px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  box-shadow: 0 16px 40px rgba(0,0,0,.4);
+  z-index: 4;
+}
+
+.phone-top {
+  height: 4px;
+  background: var(--red);
+  border-radius: 2px;
+  margin-bottom: 6px;
+}
+
+.wallet-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--text-main);
+  font-weight: 500;
+}
+
+.w-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #28a745;
+  flex-shrink: 0;
+}
+
+.w-dot.crypto { background: #f7931a; }
+.w-dot.eth    { background: #627eea; }
+.w-dot.ltc    { background: #bfbbbb; }
+
+/* ── Slide 3: Coins ──────────────────────── */
+.shape-coins {
+  position: relative;
+  width: 300px;
+  height: 300px;
+}
+
+.coin {
+  position: absolute;
+  border-radius: 50%;
+  background: var(--red);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--white);
+  border: 4px solid rgba(255,255,255,.15);
+  box-shadow: 0 8px 32px rgba(255, 68, 79, .4), inset 0 -4px 0 rgba(0,0,0,.2);
+  animation: float 3s ease-in-out infinite;
+}
+
+.flex-container {
+  width: 100%;
+  max-width: 400px; /* Limits width for a clean look */
+  padding: 20px;
+  text-align: center;
+}
+
+.coin-btc { width: 90px; height: 90px; top: 20px; left: 10px; animation-delay: 0s;   font-size: 20px; }
+.coin-fx  { width: 100px; height: 100px; bottom: 30px; right: 10px; animation-delay: .5s; font-size: 26px; }
+.coin-au  { width: 72px; height: 72px; top: 30px; right: 40px; animation-delay: 1s;  font-size: 16px; }
+.coin-oil { width: 65px; height: 65px; bottom: 60px; left: 20px; animation-delay: 1.5s; font-size: 18px; }
+.coin-idx { width: 78px; height: 78px; top: 50%; left: 50%; transform: translate(-50%, -50%); animation-delay: .75s; font-size: 20px; }
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-12px); }
+}
+
+.coin-idx { animation: floatCenter 3s ease-in-out infinite .75s; }
+@keyframes floatCenter {
+  0%, 100% { transform: translate(-50%, -50%) translateY(0); }
+  50%       { transform: translate(-50%, -50%) translateY(-12px); }
+}
+
+/* ══════════════════════════════════════════
+   RESPONSIVE
+══════════════════════════════════════════ */
+
+@media (max-width: 900px) {
+  .mobile-nav {
+    display: flex;
+  }
+
+  .hamburger {
+    display: flex;
+  }
+
+  .layout {
+    flex-direction: column;
+    min-height: calc(100vh - 52px);
+  }
+
+  .panel-left {
+    flex: none;
+    min-height: 280px;
+    padding: 24px 20px 20px;
+  }
+
+  .panel-right {
+    flex: 1;
+    height: auto;
+  }
+
+  .abstract-shape {
+    width: 220px;
+    height: 220px;
+  }
+
+  .wallet-card, .phone-mock {
+    width: 180px;
+  }
+
+  .slide-text h2 {
+    font-size: 20px;
+  }
+}
+
+@media (max-width: 600px) {
+  .panel-left {
+    padding: 24px 20px 20px;
+    min-height: 280px;
+    display: none;
+  }
+.hamburger {
+    display: none;
+  }
+  .nav-tlogo{
+  position: relative;
+  right: 0px;
+}
+  .brand .brand-name img {
+    width: 120px;
+    height: 60px;
+    color: white;
+  }
+
+  .form-container {
+    padding: 20px 24px 40px;
+  }
+  .form-container1 {
+    padding: 20px 24px 30px;
+    position: relative;
+    top: -60px;
+    overflow: hidden;
+  }
+
+  .welcome-title {
+    font-size: 26px;
+    margin-bottom: 24px;
+  }
+
+
+  .social-btn {
+    font-size: 14px;
+    padding: 12px 16px;
+  }
+
+  .login-btn {
+    font-size: 15px;
+    padding: 14px;
+  }
+
+  .abstract-shape {
+    width: 180px;
+    height: 180px;
+  }
+
+  .figure-body { width: 60px; height: 70px; }
+  .figure-head { width: 38px; height: 38px; }
+  .figure-phone { width: 42px; height: 72px; right: -28px; top: 30px; }
+
+  .coin { font-size: 16px; }
+  .coin-btc { width: 68px; height: 68px; }
+  .coin-fx  { width: 75px; height: 75px; }
+  .coin-au  { width: 55px; height: 55px; }
+  .coin-oil { width: 50px; height: 50px; }
+  .coin-idx { width: 60px; height: 60px; }
+
+  .top-bar {
+    padding: 33px 0px;
+    margin-top: -20px;
+  }
+}

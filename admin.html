@@ -1,0 +1,1141 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TurvionMeta Admin</title>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Sora:wght@300;400;600&display=swap" rel="stylesheet" />
+  <script src="/socket.io/socket.io.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #f0f4fb; --surface: #fff; --border: #dde5f0;
+      --text: #0f172a; --muted: #64748b; --blue: black;
+      --blue-dim: rgba(16,104,235,0.07); --blue-mid: rgba(16,104,235,0.15);
+      --green: #059669; --red: #dc2626; --amber: #d97706;
+      --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 4px 14px rgba(16,104,235,0.07);
+      --mono: "IBM Plex Mono", monospace; --sans: "Sora", sans-serif;
+    }
+    body { background: var(--bg); color: var(--text); font-family: var(--sans); font-size: 14px; min-height: 100vh; }
+
+    /* NAV */
+    nav {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 1.75rem; height: 52px; background: var(--surface);
+      border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 30;
+      box-shadow: 0 1px 8px rgba(16,104,235,0.08);
+    }
+    .logo { font-family: var(--mono); font-size: 12px; font-weight: 600; letter-spacing: 0.14em; color: var(--blue); }
+    .admbadge {
+      background: rgba(16,104,235,0.1); border: 1px solid rgba(16,104,235,0.2);
+      color: var(--blue); font-family: var(--mono); font-size: 10px;
+      padding: 3px 10px; border-radius: 5px; letter-spacing: 0.1em;
+    }
+    .nav-r { display: flex; align-items: center; gap: 1rem; }
+    .nclock { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+    .ava {
+      width: 30px; height: 30px; border-radius: 50%; background: var(--blue); color: #fff;
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--mono); font-size: 10px; font-weight: 600;
+    }
+    .img-fluid1 { width: 160px; height: 65px; object-fit: contain; }
+
+    /* TICKER */
+    .ticker { background: var(--blue); overflow: hidden; height: 28px; display: flex; align-items: center; }
+    .ttrack { display: flex; gap: 2.5rem; animation: scroll 32s linear infinite; white-space: nowrap; padding-left: 2rem; }
+    .titem { font-family: var(--mono); font-size: 11px; color: rgba(255,255,255,0.75); display: flex; gap: 0.45rem; align-items: center; }
+    .titem .ts { color: #fff; font-weight: 600; }
+    .tup { color: #6ee7b7; } .tdn { color: #fca5a5; }
+    @keyframes scroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+
+    /* LAYOUT — two-column when chat is open */
+    .page-body {
+      max-width: 1400px; margin: 0 auto; padding: 1.2rem 1.25rem;
+      display: grid; grid-template-columns: 1fr; gap: 1.2rem;
+      transition: grid-template-columns 0.3s ease;
+    }
+    .page-body.chat-visible { grid-template-columns: 1fr 380px; }
+
+    .left-col { display: grid; gap: 1.2rem; }
+
+    /* CHAT SIDEBAR */
+    .chat-sidebar {
+      display: none; flex-direction: column;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 12px; box-shadow: var(--shadow);
+      height: calc(100vh - 90px); position: sticky; top: 90px;
+      overflow: hidden;
+    }
+    .chat-sidebar.visible { display: flex; }
+
+    /* SESSION LIST */
+    .sessions-panel {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 12px; box-shadow: var(--shadow); overflow: hidden;
+    }
+    .sessions-header {
+      padding: 0.8rem 1.2rem; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .sessions-title { font-family: var(--mono); font-size: 12px; font-weight: 600; }
+    .sessions-badge {
+      background: #dc2626; color: #fff; font-family: var(--mono); font-size: 10px;
+      padding: 2px 7px; border-radius: 10px; display: none;
+    }
+    .sessions-badge.show { display: inline-block; }
+    .sessions-list { max-height: 260px; overflow-y: auto; }
+    .sessions-list::-webkit-scrollbar { width: 3px; }
+    .sessions-list::-webkit-scrollbar-thumb { background: var(--border); }
+    .session-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 14px; cursor: pointer; border-bottom: 1px solid var(--border);
+      transition: background 0.12s; position: relative;
+    }
+    .session-item:last-child { border-bottom: none; }
+    .session-item:hover { background: var(--bg); }
+    .session-item.active { background: var(--blue-dim); border-left: 3px solid #1068eb; }
+    .session-avatar {
+      width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0;
+      background: rgba(16,104,235,0.1); color: #1068eb;
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--mono); font-size: 12px; font-weight: 600;
+    }
+    .session-info { flex: 1; min-width: 0; }
+    .session-name { font-size: 12px; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .session-meta { font-family: var(--mono); font-size: 10px; color: var(--muted); margin-top: 2px; }
+    .session-unread {
+      background: #dc2626; color: #fff; font-family: var(--mono); font-size: 10px;
+      min-width: 18px; height: 18px; border-radius: 9px;
+      display: none; align-items: center; justify-content: center; padding: 0 5px;
+    }
+    .session-unread.show { display: flex; }
+    .session-empty { padding: 2rem; text-align: center; font-family: var(--mono); font-size: 11px; color: var(--muted); }
+
+    /* CHAT PANEL (right sidebar) */
+    .chat-panel-header {
+      padding: 14px 16px; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; gap: 10px; flex-shrink: 0;
+    }
+    .cp-avatar {
+      width: 36px; height: 36px; border-radius: 50%;
+      background: rgba(16,104,235,0.1); color: #1068eb;
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--mono); font-size: 12px; font-weight: 600;
+      flex-shrink: 0;
+    }
+    .cp-info { flex: 1; min-width: 0; }
+    .cp-name { font-family: var(--mono); font-size: 12px; font-weight: 600; }
+    .cp-method {
+      font-family: var(--mono); font-size: 10px;
+      background: rgba(16,104,235,0.08); border: 1px solid rgba(16,104,235,0.2);
+      color: #1068eb; padding: 2px 7px; border-radius: 4px;
+    }
+    .cp-resolve-btn {
+      font-family: var(--mono); font-size: 10px; font-weight: 600;
+      background: rgba(5,150,105,0.08); border: 1px solid rgba(5,150,105,0.25);
+      color: var(--green); padding: 5px 10px; border-radius: 6px;
+      cursor: pointer; transition: 0.15s; white-space: nowrap;
+    }
+    .cp-resolve-btn:hover { background: rgba(5,150,105,0.15); }
+    .cp-resolve-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .cp-close-btn {
+      width: 26px; height: 26px; border-radius: 50%; border: 1px solid var(--border);
+      background: var(--bg); color: var(--muted); cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px; transition: background 0.15s; flex-shrink: 0;
+    }
+    .cp-close-btn:hover { background: var(--border); }
+
+    /* Chat body */
+    .chat-messages {
+      flex: 1; overflow-y: auto; padding: 14px 12px;
+      display: flex; flex-direction: column; gap: 8px;
+    }
+    .chat-messages::-webkit-scrollbar { width: 3px; }
+    .chat-messages::-webkit-scrollbar-thumb { background: var(--border); }
+
+    .chat-empty-state {
+      flex: 1; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 8px;
+      padding: 2rem;
+    }
+    .chat-empty-icon { font-size: 32px; opacity: 0.4; }
+    .chat-empty-txt { font-family: var(--mono); font-size: 11px; color: var(--muted); text-align: center; }
+
+    /* Message bubbles */
+    .adm-msg-row { display: flex; gap: 6px; align-items: flex-end; animation: msgIn 0.18s ease; }
+    .adm-msg-row.from-admin { flex-direction: row-reverse; }
+    .adm-m-av {
+      width: 24px; height: 24px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 10px; flex-shrink: 0; font-family: var(--mono); font-weight: 600;
+    }
+    .adm-m-av.user-av { background: rgba(16,104,235,0.1); color: #1068eb; }
+    .adm-m-av.admin-av { background: #1068eb; color: white; }
+    .adm-bubble {
+      max-width: 78%; padding: 8px 11px; font-size: 12px;
+      line-height: 1.5; border-radius: 11px; word-break: break-word;
+    }
+    .from-user .adm-bubble {
+      background: var(--bg); border: 1px solid var(--border);
+      border-bottom-left-radius: 3px; color: var(--text);
+    }
+    .adm-bubble {
+  max-width: 78%; min-width: 0; width: fit-content;
+  padding: 8px 11px; font-size: 12px;
+  line-height: 1.5; border-radius: 11px;
+  word-break: break-word; white-space: pre-wrap;
+}
+    .from-admin .adm-bubble {
+      background: #1068eb; color: #fff;
+      border-bottom-right-radius: 3px;
+    }
+    .adm-msg-time { font-family: var(--mono); font-size: 9px; color: var(--muted); margin-top: 2px; }
+    .from-admin .adm-msg-time { text-align: right; }
+
+    /* Chat date divider */
+    .adm-chat-date {
+      text-align: center; font-family: var(--mono); font-size: 10px;
+      color: var(--muted); padding: 4px 0;
+    }
+
+    /* Sys message */
+    .adm-sys-msg {
+      align-self: center; font-family: var(--mono); font-size: 10px;
+      color: var(--muted); background: var(--bg); border: 1px solid var(--border);
+      border-radius: 20px; padding: 3px 10px;
+    }
+
+    /* Typing indicator */
+    .adm-typing-row { display: flex; gap: 6px; align-items: flex-end; }
+    .adm-typing-bubble {
+      background: var(--bg); border: 1px solid var(--border);
+      border-radius: 11px; border-bottom-left-radius: 3px;
+      padding: 8px 12px; display: inline-flex; gap: 3px; align-items: center;
+    }
+    .t-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--muted); animation: tBounce 1.2s ease infinite; }
+    .t-dot:nth-child(2) { animation-delay: 0.15s; }
+    .t-dot:nth-child(3) { animation-delay: 0.3s; }
+
+    /* Chat input */
+    .chat-input-area {
+      padding: 8px 12px 12px; border-top: 1px solid var(--border);
+      flex-shrink: 0; background: var(--surface);
+    }
+    .adm-input-wrap {
+      display: flex; gap: 7px; align-items: flex-end;
+      background: var(--bg); border: 1px solid var(--border);
+      border-radius: 10px; padding: 2px 4px 2px 10px;
+      transition: border-color 0.18s;
+    }
+    .adm-input-wrap:focus-within { border-color: rgba(16,104,235,0.4); }
+    #adminChatInput {
+      flex: 1; border: none; background: transparent;
+      font-family: var(--sans); font-size: 12px; color: var(--text);
+      outline: none; resize: none; max-height: 80px;
+      padding: 8px 0; line-height: 1.4;
+    }
+    #adminChatInput::placeholder { color: var(--muted); }
+    .adm-send-btn {
+      width: 34px; height: 34px; border-radius: 8px; border: none;
+      background: #1068eb; color: white; cursor: pointer; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      transition: opacity 0.15s, transform 0.12s;
+    }
+    .adm-send-btn:hover { transform: scale(1.06); opacity: 0.9; }
+    .adm-send-btn:disabled { opacity: 0.35; cursor: not-allowed; transform: none; }
+
+    /* Resolved banner */
+    .adm-resolved-banner {
+      background: rgba(5,150,105,0.06); border: 1px solid rgba(5,150,105,0.2);
+      border-radius: 8px; padding: 8px 12px;
+      font-family: var(--mono); font-size: 10px; color: var(--green);
+      text-align: center; margin: 4px 0;
+    }
+
+    /* Toast notification */
+    #toastContainer {
+      position: fixed; bottom: 24px; right: 24px; z-index: 9000;
+      display: flex; flex-direction: column; gap: 8px; pointer-events: none;
+    }
+    .toast {
+      background: var(--text); color: #fff;
+      font-family: var(--mono); font-size: 11px;
+      padding: 10px 16px; border-radius: 10px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+      display: flex; align-items: center; gap: 8px;
+      animation: toastIn 0.3s ease; pointer-events: auto;
+      max-width: 320px;
+    }
+    .toast.removing { animation: toastOut 0.3s ease forwards; }
+    .toast-dot { width: 7px; height: 7px; border-radius: 50%; background: #6ee7b7; flex-shrink: 0; }
+    @keyframes toastIn  { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
+    @keyframes toastOut { from { opacity:1; transform:translateY(0); } to { opacity:0; transform:translateY(12px); } }
+
+    /* Sound toggle */
+    .sound-btn {
+      font-family: var(--mono); font-size: 10px; padding: 4px 9px;
+      border: 1px solid var(--border); border-radius: 6px; background: none;
+      color: var(--muted); cursor: pointer; transition: 0.15s;
+    }
+    .sound-btn:hover { border-color: rgba(16,104,235,0.3); color: var(--blue); background: var(--blue-dim); }
+
+    /* GATE BANNER */
+    .gban {
+      background: rgba(220,38,38,0.05); border: 1px solid rgba(220,38,38,0.2);
+      border-radius: 12px; padding: 0.9rem 1.2rem;
+      display: flex; align-items: center; gap: 0.85rem; box-shadow: var(--shadow);
+    }
+    .gicon { width: 34px; height: 34px; flex-shrink: 0; background: rgba(220,38,38,0.08); border: 1px solid rgba(220,38,38,0.25); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 15px; }
+    .gtext { flex: 1; }
+    .gtitle { font-family: var(--mono); font-size: 11px; color: var(--red); margin-bottom: 2px; font-weight: 600; }
+    .gdesc { font-size: 12px; color: var(--muted); }
+    .gtag { font-family: var(--mono); font-size: 10px; background: rgba(220,38,38,0.08); border: 1px solid rgba(220,38,38,0.18); color: var(--red); padding: 4px 10px; border-radius: 5px; letter-spacing: 0.08em; white-space: nowrap; }
+
+    /* STATS */
+    .srow { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 0.85rem; }
+    .sc { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 1rem 1.2rem; box-shadow: var(--shadow); }
+    .slbl { font-size: 10px; color: var(--muted); font-family: var(--mono); text-transform: uppercase; letter-spacing: 0.09em; margin-bottom: 0.4rem; }
+    .sval { font-family: var(--mono); font-size: 19px; font-weight: 600; }
+    .ssub { font-size: 11px; margin-top: 3px; color: var(--muted); }
+    .up { color: var(--green); } .dn { color: var(--red); }
+
+    /* CONTROLS */
+    .cbar { display: flex; gap: 0.65rem; align-items: center; flex-wrap: wrap; }
+    input[type="text"] {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 9px;
+      color: var(--text); font-family: var(--mono); font-size: 12px;
+      padding: 0.48rem 0.9rem; outline: none; flex: 1; min-width: 200px; transition: 0.2s;
+    }
+    input[type="text"]:focus { border-color: rgba(16,104,235,0.4); box-shadow: 0 0 0 3px rgba(16,104,235,0.07); }
+    input[type="text"]::placeholder { color: var(--muted); }
+    .fbtn {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+      color: var(--muted); font-family: var(--mono); font-size: 11px;
+      padding: 0.45rem 0.9rem; cursor: pointer; transition: 0.15s; white-space: nowrap;
+    }
+    .fbtn:hover, .fbtn.active { border-color: rgba(16,104,235,0.3); color: var(--blue); background: var(--blue-dim); }
+
+    /* TABLE */
+    .panel { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; box-shadow: var(--shadow); }
+    .phdr { display: flex; align-items: center; justify-content: space-between; padding: 0.8rem 1.2rem; border-bottom: 1px solid var(--border); }
+    .ptitle { font-family: var(--mono); font-size: 12px; font-weight: 600; }
+    .ldot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); display: inline-block; margin-right: 6px; animation: blink 2s infinite; }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+    .tbl-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; min-width: 860px; }
+    th { font-family: var(--mono); font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.07em; padding: 0.6rem 1.1rem; text-align: left; border-bottom: 1px solid var(--border); font-weight: 400; }
+    th:not(:first-child):not(:nth-child(2)) { text-align: right; }
+    td { padding: 0.8rem 1.1rem; border-bottom: 1px solid var(--border); font-size: 13px; }
+    td:not(:first-child):not(:nth-child(2)) { text-align: right; font-family: var(--mono); font-size: 12px; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: var(--blue-dim); }
+    .ucell { display: flex; align-items: center; gap: 9px; }
+    .uava { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 600; font-family: var(--mono); flex-shrink: 0; }
+    .un { font-size: 13px; font-weight: 600; color: var(--text); }
+    .ue { font-size: 11px; color: var(--muted); }
+    .pill { display: inline-block; font-family: var(--mono); font-size: 10px; padding: 3px 9px; border-radius: 4px; letter-spacing: 0.05em; }
+    .p-act { background: rgba(5,150,105,0.08); color: var(--green); border: 1px solid rgba(5,150,105,0.2); }
+    .p-pen { background: rgba(16,104,235,0.08); color: var(--blue); border: 1px solid rgba(16,104,235,0.2); }
+    .p-flg { background: rgba(220,38,38,0.07); color: var(--red); border: 1px solid rgba(220,38,38,0.18); }
+    .spark-cell { display: flex; align-items: center; justify-content: flex-end; }
+    canvas.spark { width: 72px; height: 28px; }
+
+    /* CHAT SESSIONS PANEL (in left column) */
+    .chat-inbox-panel {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 12px; box-shadow: var(--shadow); overflow: hidden;
+    }
+
+    /* MODAL */
+    .movl { display: none; position: fixed; inset: 0; background: rgba(15,23,42,0.75); z-index: 200; align-items: center; justify-content: center; backdrop-filter: blur(3px); }
+    .movl.open { display: flex; }
+    .mbox { background: var(--surface); border: 1px solid rgba(220,38,38,0.25); border-radius: 16px; width: 90%; max-width: 440px; padding: 2rem; text-align: center; box-shadow: 0 24px 80px rgba(220,38,38,0.12); }
+    .mlock-ico { width: 56px; height: 56px; border-radius: 50%; background: rgba(220,38,38,0.08); border: 1px solid rgba(220,38,38,0.25); display: flex; align-items: center; justify-content: center; font-size: 22px; margin: 0 auto 1.1rem; }
+    .mtitle { font-family: var(--mono); font-size: 13px; color: var(--red); margin-bottom: 0.55rem; font-weight: 600; }
+    .mdesc { font-size: 13px; color: var(--muted); line-height: 1.65; margin-bottom: 1.4rem; }
+    .mclose { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: var(--mono); font-size: 12px; padding: 0.55rem 1.4rem; cursor: pointer; transition: 0.15s; }
+    .mclose:hover { background: var(--blue-dim); border-color: rgba(16,104,235,0.3); color: var(--blue); }
+    .auth-btn { flex: 1; padding: 10px 14px; border: 1px solid var(--border); border-radius: 8px; font-family: var(--mono); font-size: 12px; font-weight: 600; cursor: pointer; transition: 0.15s; }
+    .auth-btn.primary { background: var(--blue); border-color: var(--blue); color: #fff; }
+    .auth-btn.primary:hover { opacity: 0.9; }
+
+    @keyframes msgIn { from { opacity:0; transform:translateY(5px); } to { opacity:1; transform:translateY(0); } }
+    @keyframes tBounce { 0%,60%,100%{transform:translateY(0)} 30%{transform:translateY(-4px)} }
+
+    /* Responsive */
+    @media (max-width: 900px) {
+      .page-body.chat-visible { grid-template-columns: 1fr; }
+      .chat-sidebar {
+        display: none;
+        position: fixed; inset: 0; z-index: 100;
+        border-radius: 0; height: 100dvh;
+        max-height: 100dvh; top: 0;
+      }
+      .chat-sidebar.visible { display: flex; }
+      .mobile-chat-overlay {
+        display: none; position: fixed; inset: 0;
+        background: rgba(15,23,42,0.5); z-index: 99;
+        backdrop-filter: blur(2px);
+      }
+      .mobile-chat-overlay.show { display: block; }
+    }
+
+    @media (max-width: 600px) {
+      nav { padding: 0 1rem; }
+      .page-body { padding: 0.9rem 0.85rem; }
+      table { min-width: 700px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- PORTFOLIO EDIT MODAL -->
+<div class="movl" id="editPortfolioModal">
+  <div class="mbox" style="max-width:520px; width:100%; padding:1.5rem;">
+    <div class="mlock-ico">✎</div>
+    <div class="mtitle" id="editModalTitle">Edit User Portfolio</div>
+    <div class="mdesc" id="editModalDesc">Update the user's asset holdings and total portfolio value.</div>
+    <div id="editForm" style="display:grid;gap:0.8rem;text-align:left;margin:1rem 0;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;">
+        <label><span style="font-family:var(--mono);font-size:11px;color:var(--muted)">BTC</span><input id="assetBTC" type="number" min="0" step="any" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;margin-top:4px;font-family:var(--mono);font-size:12px;outline:none;"/></label>
+        <label><span style="font-family:var(--mono);font-size:11px;color:var(--muted)">ETH</span><input id="assetETH" type="number" min="0" step="any" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;margin-top:4px;font-family:var(--mono);font-size:12px;outline:none;"/></label>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;">
+        <label><span style="font-family:var(--mono);font-size:11px;color:var(--muted)">USDT</span><input id="assetUSDT" type="number" min="0" step="any" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;margin-top:4px;font-family:var(--mono);font-size:12px;outline:none;"/></label>
+        <label><span style="font-family:var(--mono);font-size:11px;color:var(--muted)">BNB</span><input id="assetBNB" type="number" min="0" step="any" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;margin-top:4px;font-family:var(--mono);font-size:12px;outline:none;"/></label>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;">
+        <label><span style="font-family:var(--mono);font-size:11px;color:var(--muted)">SOL</span><input id="assetSOL" type="number" min="0" step="any" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;margin-top:4px;font-family:var(--mono);font-size:12px;outline:none;"/></label>
+        <label><span style="font-family:var(--mono);font-size:11px;color:var(--muted)">XRP</span><input id="assetXRP" type="number" min="0" step="any" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;margin-top:4px;font-family:var(--mono);font-size:12px;outline:none;"/></label>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;">
+        <label><span style="font-family:var(--mono);font-size:11px;color:var(--muted)">ADA</span><input id="assetADA" type="number" min="0" step="any" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;margin-top:4px;font-family:var(--mono);font-size:12px;outline:none;"/></label>
+        <label><span style="font-family:var(--mono);font-size:11px;color:var(--muted)">DOGE</span><input id="assetDOGE" type="number" min="0" step="any" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;margin-top:4px;font-family:var(--mono);font-size:12px;outline:none;"/></label>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;">
+        <label><span style="font-family:var(--mono);font-size:11px;color:var(--muted)">AVAX</span><input id="assetAVAX" type="number" min="0" step="any" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;margin-top:4px;font-family:var(--mono);font-size:12px;outline:none;"/></label>
+        <label><span style="font-family:var(--mono);font-size:11px;color:var(--muted)">LINK</span><input id="assetLINK" type="number" min="0" step="any" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;margin-top:4px;font-family:var(--mono);font-size:12px;outline:none;"/></label>
+      </div>
+      <label><span style="font-family:var(--mono);font-size:11px;color:var(--muted)">Total Portfolio Value ($)</span><input id="assetTotal" type="number" min="0" step="any" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;margin-top:4px;font-family:var(--mono);font-size:12px;outline:none;"/></label>
+    </div>
+    <div id="editError" style="display:none;color:#dc2626;font-size:12px;margin-bottom:10px;font-family:var(--mono);"></div>
+    <div style="display:flex;gap:0.9rem;flex-wrap:wrap;justify-content:flex-end;margin-top:1rem;">
+      <button class="mclose" onclick="closeEditModal()">Cancel</button>
+      <button class="auth-btn primary" onclick="savePortfolioEdits()">Save changes</button>
+    </div>
+  </div>
+</div>
+
+<!-- Mobile chat overlay backdrop -->
+<div class="mobile-chat-overlay" id="mobileChatOverlay" onclick="closeChatSidebar()"></div>
+
+<!-- Toast container -->
+<div id="toastContainer"></div>
+
+<nav>
+  <span class="logo">
+    <img class="img-fluid1" alt="TurvionMeta" src="./images/logo.png"
+      onerror="this.style.display='none';this.nextSibling.style.display='inline'"/>
+    <span style="display:none;font-family:var(--mono);font-size:13px;font-weight:600;letter-spacing:0.1em">TURVIONMETA</span>
+  </span>
+  <span class="admbadge">ADMIN</span>
+  <div class="nav-r">
+    <span class="nclock" id="clock">--:--:--</span>
+    <button class="sound-btn" id="soundBtn" onclick="toggleSound()" title="Toggle notification sound">🔔 Sound</button>
+    <div class="ava">AD</div>
+    <a href="./admin-login.html" style="font-family:var(--mono);font-size:11px;color:var(--muted);text-decoration:none;cursor:pointer;" onclick="logout()">Logout</a>
+  </div>
+</nav>
+
+<div class="ticker">
+  <div class="ttrack" id="ttrack"></div>
+</div>
+
+<div class="page-body" id="pageBody">
+  <!-- LEFT COLUMN -->
+  <div class="left-col">
+
+    <!-- GATE -->
+    <div class="gban">
+      <div class="gtext">
+        <div class="gtitle">PRICE MODIFICATION RESTRICTED</div>
+        <div class="gdesc">You can view all user portfolios and live positions in read-only mode. Asset price editing is gated until the restriction is lifted by the platform owner.</div>
+      </div>
+      <span class="gtag">LOCKED</span>
+    </div>
+
+    <!-- ADMIN STATS -->
+    <div class="srow">
+      <div class="sc">
+        <div class="slbl">Total Users</div>
+        <div class="sval" style="color:var(--blue)" id="statUsers">—</div>
+        <div class="ssub">Registered accounts</div>
+      </div>
+      <div class="sc">
+        <div class="slbl">Platform AUM</div>
+        <div class="sval" id="statAUM">—</div>
+        <div class="ssub">All accounts</div>
+      </div>
+      <div class="sc">
+        <div class="slbl">Active Chats</div>
+        <div class="sval" id="statChats" style="color:#1068eb">0</div>
+        <div class="ssub">Open sessions</div>
+      </div>
+      <div class="sc">
+        <div class="slbl">Unread Msgs</div>
+        <div class="sval" id="statUnread" style="color:var(--red)">0</div>
+        <div class="ssub">Needs response</div>
+      </div>
+    </div>
+
+    <!-- CHAT INBOX -->
+    <div class="chat-inbox-panel">
+      <div class="sessions-header">
+        <span class="sessions-title"><span class="ldot"></span>Donation Chat Inbox</span>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span class="sessions-badge" id="globalUnreadBadge">0</span>
+          <span style="font-family:var(--mono);font-size:10px;color:var(--muted)" id="sessionsCount">0 sessions</span>
+        </div>
+      </div>
+      <div class="sessions-list" id="sessionsList">
+        <div class="session-empty">No active sessions yet. Waiting for donors…</div>
+      </div>
+    </div>
+
+    <!-- CONTROLS -->
+    <div class="cbar">
+      <input type="text" id="search" placeholder="Search users…" oninput="filter()" />
+      <button class="fbtn active" onclick="setF('all',this)">All</button>
+      <button class="fbtn" onclick="setF('active',this)">Active</button>
+      <button class="fbtn" onclick="setF('pending',this)">Pending</button>
+      <button class="fbtn" onclick="setF('flagged',this)">Flagged</button>
+    </div>
+
+    <!-- TABLE -->
+    <div class="panel">
+      <div class="phdr">
+        <span class="ptitle"><span class="ldot"></span>User Portfolio Overview</span>
+        <span style="font-family:var(--mono);font-size:10px;color:var(--muted)" id="ucount">0 users</span>
+      </div>
+      <div class="tbl-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>User</th><th>Status</th><th>BTC</th><th>ETH</th>
+              <th>USDT</th><th>Other</th><th>Total Value</th><th>24h</th>
+              <th>Trend</th><th>Edit</th>
+            </tr>
+          </thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </div><!-- /left-col -->
+
+  <!-- CHAT SIDEBAR (right column) -->
+  <div class="chat-sidebar" id="chatSidebar">
+
+    <div class="chat-panel-header" id="chatPanelHeader">
+      <div class="cp-avatar" id="cpAvatar">?</div>
+      <div class="cp-info">
+        <div class="cp-name" id="cpName">Select a session</div>
+        <div style="margin-top:3px;">
+          <span class="cp-method" id="cpMethod">—</span>
+        </div>
+      </div>
+      <button class="cp-resolve-btn" id="resolveBtn" onclick="resolveSession()" disabled>✓ Resolve</button>
+      <button class="cp-close-btn" onclick="closeChatSidebar()">✕</button>
+    </div>
+
+    <div class="chat-messages" id="adminChatMessages">
+      <div class="chat-empty-state">
+        <div class="chat-empty-icon">💬</div>
+        <div class="chat-empty-txt">Pick a session from the inbox<br>to start replying</div>
+      </div>
+    </div>
+
+    <div class="chat-input-area" id="adminChatInputArea">
+      <div class="adm-input-wrap">
+        <textarea id="adminChatInput" rows="1" placeholder="Type a reply…" disabled></textarea>
+        <button class="adm-send-btn" id="adminSendBtn" onclick="adminSendMessage()" disabled>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+            <path d="M22 2L11 13M22 2L15 22l-4-9-9-4 20-7z" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+  </div><!-- /chat-sidebar -->
+</div><!-- /page-body -->
+
+<script>
+  // ════════════════════════════════════════════════════════════════
+  //  COINS / PRICES / SPARKLINE (unchanged from your original)
+  // ════════════════════════════════════════════════════════════════
+  const COINS = {
+    BTC:{name:"Bitcoin",color:"#f7931a",bg:"rgba(247,147,26,.12)",sym:"₿",base:67420,vol:500,pair:"BTC/USD"},
+    ETH:{name:"Ethereum",color:"#627eea",bg:"rgba(98,126,234,.12)",sym:"Ξ",base:3510,vol:35,pair:"ETH/USD"},
+    USDT:{name:"Tether",color:"#26a17b",bg:"rgba(38,161,123,.12)",sym:"₮",base:1.0002,vol:0.0004,pair:"USDT/USD"},
+    BNB:{name:"BNB",color:"#f3ba2f",bg:"rgba(243,186,47,.12)",sym:"B",base:594,vol:7,pair:"BNB/USD"},
+    SOL:{name:"Solana",color:"#9945ff",bg:"rgba(153,69,255,.12)",sym:"◎",base:172,vol:2.5,pair:"SOL/USD"},
+    XRP:{name:"Ripple",color:"rgb(255,68,79)",bg:"rgba(16,104,235,.12)",sym:"✕",base:0.621,vol:0.007,pair:"XRP/USD"},
+    ADA:{name:"Cardano",color:"#0033ad",bg:"rgba(0,51,173,.12)",sym:"A",base:0.584,vol:0.006,pair:"ADA/USD"},
+    DOGE:{name:"Dogecoin",color:"#c2a633",bg:"rgba(194,166,51,.12)",sym:"Ð",base:0.168,vol:0.003,pair:"DOGE/USD"},
+    AVAX:{name:"Avalanche",color:"#e84142",bg:"rgba(232,65,66,.12)",sym:"A",base:38.9,vol:0.5,pair:"AVAX/USD"},
+    LINK:{name:"Chainlink",color:"#2a5ada",bg:"rgba(42,90,218,.12)",sym:"⬡",base:14.2,vol:0.25,pair:"LINK/USD"},
+  };
+  const prices = {}, cdata = {};
+  Object.keys(COINS).forEach(k => { prices[k] = COINS[k].base; cdata[k] = genC(COINS[k].base, COINS[k].vol, 60); });
+
+  function genC(base, vol, n) {
+    const a=[]; let p=base*(0.96+Math.random()*0.06);
+    for(let i=0;i<n;i++){const o=p,m=(Math.random()-0.47)*vol*2.2,c=Math.max(o+m,base*0.75);a.push({o,h:Math.max(o,c)+Math.random()*vol*0.5,l:Math.min(o,c)-Math.random()*vol*0.5,c,v:0.4+Math.random()*2});p=c;}
+    return a;
+  }
+  function tickAll(){
+    Object.keys(COINS).forEach(k=>{const c=COINS[k],arr=cdata[k],last=arr[arr.length-1];const np=Math.max(last.c+(Math.random()-0.485)*c.vol*1.3,c.base*0.65);last.c=np;last.h=Math.max(last.h,np);last.l=Math.min(last.l,np);last.v+=0.01;if(Math.random()<0.08){arr.push({o:np,h:np,l:np,c:np,v:0.08});if(arr.length>120)arr.shift();}prices[k]=np;});
+  }
+  function fmtP(v){if(v>=1000)return"$"+v.toLocaleString("en-US",{maximumFractionDigits:0});if(v>=10)return"$"+v.toFixed(2);if(v>=1)return"$"+v.toFixed(4);return"$"+v.toFixed(5);}
+
+  function drawSpark(canvas,key,isUp){
+    const dpr=window.devicePixelRatio||1,W=canvas.offsetWidth||72,H=canvas.offsetHeight||28;
+    canvas.width=W*dpr;canvas.height=H*dpr;
+    const ctx=canvas.getContext("2d");ctx.scale(dpr,dpr);
+    const arr=cdata[key],n=Math.min(arr.length,30),vis=arr.slice(-n);
+    let hi=-Infinity,lo=Infinity;vis.forEach(c=>{hi=Math.max(hi,c.h);lo=Math.min(lo,c.l);});
+    const pr=hi-lo||0.001,col=isUp?"#059669":"#dc2626";
+    const pts=vis.map((c,i)=>({x:4+(i/(n-1))*(W-8),y:H-2-((c.c-lo)/pr)*(H-4)}));
+    ctx.strokeStyle=col;ctx.lineWidth=1.2;ctx.beginPath();
+    pts.forEach((p,i)=>i===0?ctx.moveTo(p.x,p.y):ctx.lineTo(p.x,p.y));ctx.stroke();
+  }
+
+  // ════════════════════════════════════════════════════════════════
+  //  CHAT STATE
+  // ════════════════════════════════════════════════════════════════
+  let adminSocket = null;
+  let activeChatSessionId = null;
+  let chatSessionsMap = {}; // sessionId → session object
+  let soundEnabled = true;
+
+  // Audio context for notification beep
+  let audioCtx = null;
+  function playBeep() {
+    if (!soundEnabled) return;
+    try {
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.connect(gain); gain.connect(audioCtx.destination);
+      osc.frequency.value = 880; osc.type = 'sine';
+      gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
+      osc.start(audioCtx.currentTime); osc.stop(audioCtx.currentTime + 0.3);
+    } catch(e) {}
+  }
+
+  function toggleSound() {
+    soundEnabled = !soundEnabled;
+    document.getElementById('soundBtn').textContent = soundEnabled ? '🔔 Sound' : '🔕 Muted';
+  }
+
+  // ════════════════════════════════════════════════════════════════
+  //  TOAST NOTIFICATIONS
+  // ════════════════════════════════════════════════════════════════
+  function showToast(msg, duration = 4000) {
+    const c = document.getElementById('toastContainer');
+    const t = document.createElement('div'); t.className = 'toast';
+    t.innerHTML = `<span class="toast-dot"></span><span>${msg}</span>`;
+    c.appendChild(t);
+    playBeep();
+    setTimeout(() => {
+      t.classList.add('removing');
+      setTimeout(() => t.remove(), 300);
+    }, duration);
+  }
+
+  // ════════════════════════════════════════════════════════════════
+  //  SOCKET CONNECTION (admin)
+  // ════════════════════════════════════════════════════════════════
+  function initAdminSocket() {
+    adminSocket = io();
+
+    adminSocket.on('connect', () => {
+      adminSocket.emit('admin:join');
+    });
+
+    // Initial sessions dump
+    adminSocket.on('admin:sessions', (sessions) => {
+      chatSessionsMap = {};
+      sessions.forEach(s => chatSessionsMap[s.sessionId] = s);
+      renderSessionsList();
+      updateChatStats();
+    });
+
+    // A new user started a session
+    adminSocket.on('admin:new_session_notification', ({ sessionId, userName, paymentMethod }) => {
+      showToast(`💬 New donor: <strong>${userName}</strong> via ${paymentMethod}`);
+    });
+
+    // Session updated (new message, resolve, etc.)
+    adminSocket.on('admin:session_update', (session) => {
+      chatSessionsMap[session.sessionId] = session;
+      renderSessionsList();
+      updateChatStats();
+      // If this session is open in the sidebar, re-render messages
+      if (activeChatSessionId === session.sessionId) {
+        // Only append new messages — don't full re-render to avoid flash
+        syncActiveChatMessages(session);
+      }
+    });
+
+    // New message from user
+    adminSocket.on('admin:new_user_message', ({ sessionId, message, userName, paymentMethod, unreadCount }) => {
+      chatSessionsMap[sessionId] = chatSessionsMap[sessionId] || {};
+      chatSessionsMap[sessionId].unreadCount = unreadCount;
+
+      // If not currently viewing this session, play sound + toast
+      if (activeChatSessionId !== sessionId) {
+        showToast(`💬 ${userName} (${paymentMethod}): ${message.text.slice(0,60)}${message.text.length>60?'…':''}`);
+      }
+      renderSessionsList();
+      updateChatStats();
+
+      // Append message to sidebar if this session is open
+      if (activeChatSessionId === sessionId) {
+        // Remove typing indicator first
+        document.getElementById('adminTypingInd')?.remove();
+        appendAdminMessage(message);
+        scrollAdminBottom();
+      }
+    });
+
+    // User typing
+    adminSocket.on('chat:user_typing', ({ sessionId, isTyping, userName }) => {
+      if (activeChatSessionId !== sessionId) return;
+      const ex = document.getElementById('adminTypingInd');
+      if (isTyping && !ex) {
+        const row = document.createElement('div');
+        row.id = 'adminTypingInd'; row.className = 'adm-msg-row from-user';
+        row.innerHTML = `<div class="adm-m-av user-av">${(userName||'U')[0].toUpperCase()}</div>
+          <div><div class="adm-typing-bubble"><span class="t-dot"></span><span class="t-dot"></span><span class="t-dot"></span></div></div>`;
+        document.getElementById('adminChatMessages').appendChild(row);
+        scrollAdminBottom();
+      } else if (!isTyping && ex) { ex.remove(); }
+    });
+
+    // User went offline
+    adminSocket.on('admin:user_offline', ({ sessionId }) => {
+      if (chatSessionsMap[sessionId]) renderSessionsList();
+    });
+  }
+
+  // ════════════════════════════════════════════════════════════════
+  //  SESSIONS LIST
+  // ════════════════════════════════════════════════════════════════
+  function renderSessionsList() {
+    const list = document.getElementById('sessionsList');
+    const sessions = Object.values(chatSessionsMap)
+      .sort((a, b) => new Date(b.lastActivity) - new Date(a.lastActivity));
+
+    document.getElementById('sessionsCount').textContent = sessions.length + ' session' + (sessions.length !== 1 ? 's' : '');
+
+    const totalUnread = sessions.reduce((s, x) => s + (x.unreadCount || 0), 0);
+    const badge = document.getElementById('globalUnreadBadge');
+    badge.textContent = totalUnread;
+    badge.classList.toggle('show', totalUnread > 0);
+
+    if (sessions.length === 0) {
+      list.innerHTML = '<div class="session-empty">No active sessions yet. Waiting for donors…</div>';
+      return;
+    }
+
+    list.innerHTML = '';
+    sessions.forEach(s => {
+      const initials = (s.userName || 'G').split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+      const lastMsg = s.messages.length ? s.messages[s.messages.length - 1] : null;
+      const preview = lastMsg ? lastMsg.text.slice(0, 42) + (lastMsg.text.length > 42 ? '…' : '') : 'No messages yet';
+      const timeAgo = lastMsg ? fmtTimeAgo(lastMsg.timestamp) : '';
+      const isActive = activeChatSessionId === s.sessionId;
+      const isResolved = s.status === 'resolved';
+      const unread = s.unreadCount || 0;
+
+      const item = document.createElement('div');
+      item.className = 'session-item' + (isActive ? ' active' : '');
+      item.onclick = () => openChatSession(s.sessionId);
+      item.innerHTML = `
+        <div class="session-avatar">${initials}</div>
+        <div class="session-info">
+          <div class="session-name">${esc(s.userName || 'Guest')}</div>
+          <div class="session-meta">
+            <span style="background:rgba(16,104,235,0.08);border:1px solid rgba(16,104,235,0.15);color:#1068eb;padding:1px 6px;border-radius:3px;font-size:9px;">${s.paymentMethod}</span>
+            ${isResolved ? '<span style="color:var(--green);margin-left:4px;">✓ resolved</span>' : ''}
+            <span style="margin-left:4px;">${timeAgo}</span>
+          </div>
+          <div style="font-size:11px;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:180px;">${esc(preview)}</div>
+        </div>
+        <div class="session-unread ${unread > 0 && !isActive ? 'show' : ''}">${unread}</div>
+      `;
+      list.appendChild(item);
+    });
+  }
+
+  function updateChatStats() {
+    const sessions = Object.values(chatSessionsMap);
+    const open = sessions.filter(s => s.status === 'open').length;
+    const unread = sessions.reduce((s, x) => s + (x.unreadCount || 0), 0);
+    document.getElementById('statChats').textContent = open;
+    document.getElementById('statUnread').textContent = unread;
+  }
+
+  // ════════════════════════════════════════════════════════════════
+  //  OPEN / CLOSE CHAT SESSION
+  // ════════════════════════════════════════════════════════════════
+  function openChatSession(sessionId) {
+    activeChatSessionId = sessionId;
+    const s = chatSessionsMap[sessionId];
+    if (!s) return;
+
+    // Mark as read
+    if (adminSocket) adminSocket.emit('admin:join_session', { sessionId });
+    s.unreadCount = 0;
+
+    // Update header
+    const initials = (s.userName || 'G').split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+    document.getElementById('cpAvatar').textContent = initials;
+    document.getElementById('cpName').textContent = s.userName || 'Guest';
+    document.getElementById('cpMethod').textContent = s.paymentMethod;
+
+    const resolveBtn = document.getElementById('resolveBtn');
+    resolveBtn.disabled = s.status === 'resolved';
+    resolveBtn.textContent = s.status === 'resolved' ? '✓ Resolved' : '✓ Resolve';
+
+    // Enable input
+    const input = document.getElementById('adminChatInput');
+    const sendBtn = document.getElementById('adminSendBtn');
+    input.disabled = s.status === 'resolved';
+    sendBtn.disabled = s.status === 'resolved';
+    input.placeholder = s.status === 'resolved' ? 'Conversation resolved.' : 'Type a reply…';
+
+    // Render messages
+    renderAdminMessages(s);
+
+    // Show sidebar
+    document.getElementById('chatSidebar').classList.add('visible');
+    document.getElementById('pageBody').classList.add('chat-visible');
+    document.getElementById('mobileChatOverlay').classList.add('show');
+
+    // Update sessions list to clear unread
+    renderSessionsList();
+  }
+
+  function closeChatSidebar() {
+    activeChatSessionId = null;
+    document.getElementById('chatSidebar').classList.remove('visible');
+    document.getElementById('pageBody').classList.remove('chat-visible');
+    document.getElementById('mobileChatOverlay').classList.remove('show');
+    renderSessionsList();
+  }
+
+  // ════════════════════════════════════════════════════════════════
+  //  RENDER MESSAGES IN ADMIN CHAT
+  // ════════════════════════════════════════════════════════════════
+  let renderedMsgIds = new Set();
+
+  function renderAdminMessages(session) {
+    renderedMsgIds.clear();
+    const box = document.getElementById('adminChatMessages');
+    box.innerHTML = '';
+
+    if (session.messages.length === 0) {
+      box.innerHTML = `<div class="adm-chat-date">Today</div>
+        <div class="adm-sys-msg">Connected via ${session.paymentMethod}</div>`;
+      scrollAdminBottom(); return;
+    }
+
+    box.innerHTML = `<div class="adm-chat-date">Today</div>
+      <div class="adm-sys-msg">Connected via ${session.paymentMethod}</div>`;
+
+    session.messages.forEach(msg => {
+      renderedMsgIds.add(msg.id);
+      box.appendChild(buildMsgEl(msg));
+    });
+
+    if (session.status === 'resolved') {
+      const b = document.createElement('div'); b.className = 'adm-resolved-banner';
+      b.textContent = '✅ Conversation resolved.';
+      box.appendChild(b);
+    }
+
+    scrollAdminBottom();
+  }
+
+  function syncActiveChatMessages(session) {
+    // Only add messages we haven't rendered yet
+    session.messages.forEach(msg => {
+      if (!renderedMsgIds.has(msg.id)) {
+        renderedMsgIds.add(msg.id);
+        appendAdminMessage(msg);
+      }
+    });
+    if (session.status === 'resolved' && !document.querySelector('.adm-resolved-banner')) {
+      const b = document.createElement('div'); b.className = 'adm-resolved-banner';
+      b.textContent = '✅ Conversation resolved.';
+      document.getElementById('adminChatMessages').appendChild(b);
+      document.getElementById('resolveBtn').disabled = true;
+      document.getElementById('resolveBtn').textContent = '✓ Resolved';
+      document.getElementById('adminChatInput').disabled = true;
+      document.getElementById('adminSendBtn').disabled = true;
+    }
+  }
+
+  function appendAdminMessage(msg) {
+    renderedMsgIds.add(msg.id);
+    const box = document.getElementById('adminChatMessages');
+    box.appendChild(buildMsgEl(msg));
+    scrollAdminBottom();
+  }
+
+  function buildMsgEl(msg) {
+    const isAdmin = msg.sender === 'admin';
+    const row = document.createElement('div');
+    row.className = 'adm-msg-row ' + (isAdmin ? 'from-admin' : 'from-user');
+    const initial = isAdmin ? 'A' : (msg.senderName||'U')[0].toUpperCase();
+    const avClass = isAdmin ? 'admin-av' : 'user-av';
+    row.innerHTML = `
+  <div class="adm-m-av ${avClass}">${initial}</div>
+  <div style="display:inline-flex;flex-direction:column;align-items:${isAdmin?'flex-end':'flex-start'}">
+    <div class="adm-bubble">${esc(msg.text)}</div>
+        <div class="adm-msg-time">${fmtTime(msg.timestamp)}${!isAdmin ? ' · '+esc(msg.senderName||'User') : ''}</div>
+      </div>`;
+    return row;
+  }
+
+  function scrollAdminBottom() {
+    setTimeout(() => {
+      const b = document.getElementById('adminChatMessages');
+      b.scrollTop = b.scrollHeight;
+    }, 50);
+  }
+
+  // ════════════════════════════════════════════════════════════════
+  //  ADMIN SEND MESSAGE
+  // ════════════════════════════════════════════════════════════════
+  function adminSendMessage() {
+    const input = document.getElementById('adminChatInput');
+    const text = input.value.trim();
+    if (!text || !activeChatSessionId) return;
+    adminSocket.emit('admin:message', { sessionId: activeChatSessionId, text });
+    adminSocket.emit('admin:typing', { sessionId: activeChatSessionId, isTyping: false });
+    input.value = '';
+    input.style.height = 'auto';
+  }
+
+  let adminTypingTO;
+  document.addEventListener('DOMContentLoaded', () => {
+    const input = document.getElementById('adminChatInput');
+    input.addEventListener('input', () => {
+      input.style.height = 'auto';
+      input.style.height = input.scrollHeight + 'px';
+      if (!activeChatSessionId) return;
+      adminSocket.emit('admin:typing', { sessionId: activeChatSessionId, isTyping: true });
+      clearTimeout(adminTypingTO);
+      adminTypingTO = setTimeout(() => {
+        adminSocket.emit('admin:typing', { sessionId: activeChatSessionId, isTyping: false });
+      }, 1500);
+    });
+    input.addEventListener('keydown', e => {
+      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); adminSendMessage(); }
+    });
+  });
+
+  // ════════════════════════════════════════════════════════════════
+  //  RESOLVE SESSION
+  // ════════════════════════════════════════════════════════════════
+  function resolveSession() {
+    if (!activeChatSessionId) return;
+    if (!confirm('Mark this conversation as resolved?')) return;
+    adminSocket.emit('admin:resolve_session', { sessionId: activeChatSessionId });
+  }
+
+  // ════════════════════════════════════════════════════════════════
+  //  PORTFOLIO TABLE (unchanged logic, updated fetch)
+  // ════════════════════════════════════════════════════════════════
+  let selectedEditUserId = null, USERS = [], filt = 'all';
+  const sparkCanvases = {};
+
+  async function initAdminPanel() {
+    try {
+      const authRes = await fetch('/api/auth/me');
+      if (!authRes.ok) throw new Error('Not authenticated');
+      const authData = await authRes.json();
+      if (!authData.user?.isAdmin) throw new Error('Admin required');
+
+      await loadAdminUsers();
+      initAdminSocket();
+      buildTicker();
+      tick();
+      setInterval(tick, 1000);
+      setInterval(loop, 500);
+    } catch (e) {
+      alert('Access denied. Please log in as admin.');
+      window.location.href = './admin-login.html';
+    }
+  }
+
+  async function loadAdminUsers() {
+    try {
+      const res = await fetch('/api/admin/users');
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to load users');
+      USERS = data.users.map((user, idx) => ({
+        id: user.id, name: user.fullName, email: user.email,
+        ini: user.fullName.split(' ').map(n => n[0]).join('').toUpperCase(),
+        color: getColorByIndex(idx), cbg: getColorBgByIndex(idx),
+        status: user.status || 'active',
+        BTC: Number(user.BTC||0), ETH: Number(user.ETH||0), USDT: Number(user.USDT||0),
+        BNB: Number(user.BNB||0), SOL: Number(user.SOL||0), XRP: Number(user.XRP||0),
+        ADA: Number(user.ADA||0), DOGE: Number(user.DOGE||0), AVAX: Number(user.AVAX||0),
+        LINK: Number(user.LINK||0), total: Number(user.totalValue||0),
+        chg: (Math.random()-0.5)*5,
+      }));
+      buildTable(USERS);
+      const totalAUM = USERS.reduce((s,u) => s + u.total, 0);
+      document.getElementById('statUsers').textContent = USERS.length;
+      document.getElementById('statAUM').textContent = '$' + totalAUM.toLocaleString();
+      document.getElementById('ucount').textContent = USERS.length + ' user' + (USERS.length !== 1 ? 's' : '');
+    } catch(e) { console.error(e); }
+  }
+
+  function getColorByIndex(i) { return ['#f7931a','#627eea','#d97706','#9945ff','#dc2626','#0284c7','#16a34a','#ca8a04'][i%8]; }
+  function getColorBgByIndex(i) { return ['rgba(247,147,26,.12)','rgba(98,126,234,.12)','rgba(217,119,6,.12)','rgba(153,69,255,.12)','rgba(220,38,38,.12)','rgba(2,132,199,.12)','rgba(22,163,74,.12)','rgba(202,138,4,.12)'][i%8]; }
+
+  function buildTable(data) {
+    const tb = document.getElementById('tbody'); tb.innerHTML = '';
+    data.forEach((u, ui) => {
+      const sc = u.status==='active'?'p-act':u.status==='pending'?'p-pen':'p-flg';
+      const cc = u.chg>=0?'up':'dn';
+      const sid = `sp-${ui}`;
+      const row = document.createElement('tr');
+      row.dataset.status = u.status; row.dataset.name = u.name.toLowerCase();
+      row.innerHTML = `
+        <td><div class="ucell">
+          <div class="uava" style="background:${u.cbg};color:${u.color}">${u.ini}</div>
+          <div><div class="un">${u.name}</div><div class="ue">${u.email}</div></div>
+        </div></td>
+        <td><span class="pill ${sc}">${u.status.toUpperCase()}</span></td>
+        <td>${u.BTC}</td>
+        <td>${u.ETH}</td>
+        <td>${u.USDT>0?'$'+u.USDT.toLocaleString():'-'}</td>
+        <td>${(u.BNB+u.SOL+u.XRP+u.ADA+u.DOGE+u.AVAX+u.LINK)>0?'$'+(u.BNB+u.SOL+u.XRP+u.ADA+u.DOGE+u.AVAX+u.LINK).toLocaleString():'-'}</td>
+        <td style="font-weight:600">$${u.total.toLocaleString()}</td>
+        <td class="${cc}">${u.chg>=0?'+':''}${u.chg.toFixed(2)}%</td>
+        <td><div class="spark-cell"><canvas class="spark" id="${sid}"></canvas></div></td>
+        <td><button class="fbtn active" onclick="openEditModal(${u.id})">Edit</button></td>`;
+      tb.appendChild(row);
+      requestAnimationFrame(() => {
+        const cv = document.getElementById(sid);
+        if (cv) { sparkCanvases[sid] = {cv, key:u.chg>=0?'BTC':'ETH', up:u.chg>=0}; drawSpark(cv, u.chg>=0?'BTC':'SOL', u.chg>=0); }
+      });
+    });
+  }
+
+  function openEditModal(userId) {
+    selectedEditUserId = userId;
+    const u = USERS.find(x => x.id === userId);
+    if (!u) return;
+    document.getElementById('editModalTitle').textContent = `Edit ${u.name} Portfolio`;
+    document.getElementById('editModalDesc').textContent = `Modify holdings for ${u.email}.`;
+    ['BTC','ETH','USDT','BNB','SOL','XRP','ADA','DOGE','AVAX','LINK'].forEach(k => {
+      document.getElementById('asset'+k).value = u[k];
+    });
+    document.getElementById('assetTotal').value = u.total;
+    document.getElementById('editError').style.display = 'none';
+    document.getElementById('editPortfolioModal').classList.add('open');
+  }
+
+  function closeEditModal() { document.getElementById('editPortfolioModal').classList.remove('open'); }
+
+  async function savePortfolioEdits() {
+    const errorEl = document.getElementById('editError');
+    errorEl.style.display = 'none';
+    if (!selectedEditUserId) return;
+    const payload = {};
+    ['BTC','ETH','USDT','BNB','SOL','XRP','ADA','DOGE','AVAX','LINK'].forEach(k => {
+      payload[k] = parseFloat(document.getElementById('asset'+k).value) || 0;
+    });
+    payload.totalValue = parseFloat(document.getElementById('assetTotal').value) || 0;
+    try {
+      const res = await fetch(`/api/portfolio/${selectedEditUserId}`, {
+        method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Unable to save');
+      await loadAdminUsers();
+      closeEditModal();
+    } catch(e) {
+      errorEl.style.display = 'block'; errorEl.textContent = e.message;
+    }
+  }
+
+  function filter() {
+    const q = document.getElementById('search').value.toLowerCase();
+    const filtered = USERS.filter(u => {
+      const mn = u.name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q);
+      const ms = filt === 'all' || u.status === filt;
+      return mn && ms;
+    });
+    buildTable(filtered);
+  }
+
+  function setF(f, btn) {
+    filt = f;
+    document.querySelectorAll('.fbtn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    filter();
+  }
+
+  // Ticker
+  function buildTicker() {
+    const keys = Object.keys(COINS); let h = '';
+    for(let r=0;r<2;r++) keys.forEach(k=>{h+=`<span class="titem"><span class="ts">${k}</span><span id="tk-${k}-${r}">${fmtP(prices[k])}</span><span class="tup" id="tkc-${k}-${r}">+0.00%</span></span>`;});
+    document.getElementById('ttrack').innerHTML = h;
+  }
+
+  function tick() { document.getElementById('clock').textContent = new Date().toTimeString().slice(0,8); }
+
+  async function logout() {
+    try { await fetch('/api/auth/logout', {method:'POST',headers:{'Content-Type':'application/json'}}); } catch(e) {}
+    window.location.href = './admin-login.html';
+  }
+
+  let fr = 0;
+  function loop() {
+    fr++; tickAll();
+    if(fr%5===0){
+      Object.keys(COINS).forEach(k=>{
+        const lp=prices[k],op=cdata[k][0]?.o||lp,chg=((lp-op)/op)*100,cls=chg>=0?'tup':'tdn';
+        for(let r=0;r<2;r++){const pe=document.getElementById(`tk-${k}-${r}`);const ce=document.getElementById(`tkc-${k}-${r}`);if(pe)pe.textContent=fmtP(lp);if(ce){ce.textContent=(chg>=0?'+':'')+chg.toFixed(2)+'%';ce.className=cls;}}
+      });
+    }
+    if(fr%6===0){Object.keys(sparkCanvases).forEach(sid=>{const{cv,up}=sparkCanvases[sid];if(cv&&cv.offsetWidth)drawSpark(cv,up?'BTC':'ETH',up);});}
+  }
+
+  // Helpers
+  function fmtTime(iso) { return new Date(iso).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}); }
+  function fmtTimeAgo(iso) {
+    const diff = Date.now() - new Date(iso);
+    const m = Math.floor(diff/60000);
+    if (m < 1) return 'just now';
+    if (m < 60) return m + 'm ago';
+    const h = Math.floor(m/60);
+    if (h < 24) return h + 'h ago';
+    return Math.floor(h/24) + 'd ago';
+  }
+  function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>'); }
+
+  initAdminPanel();
+</script>
+</body>
+</html>

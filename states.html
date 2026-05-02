@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Browse by State  Mortgage Brokers</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #F2F0EB;
+  --card-bg: #FFFFFF;
+  --text-1: #111111;
+  --text-2: #666666;
+  --radius: 12px;
+  --shadow-card: 0 1px 3px rgba(0,0,0,.06), 0 4px 12px rgba(0,0,0,.06);
+  --shadow-hover: 0 4px 8px rgba(0,0,0,.05), 0 14px 36px rgba(0,0,0,.12);
+}
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  min-height: 100vh;
+  padding: 48px 24px 72px;
+}
+
+.page-title {
+  text-align: center;
+  margin-bottom: 44px;
+}
+.page-title h1 {
+  font-family: 'Libre Baskerville', serif;
+  font-size: clamp(26px, 3.5vw, 40px);
+  font-weight: 700;
+  color: var(--text-1);
+  letter-spacing: -0.3px;
+  margin-bottom: 8px;
+}
+.page-title p {
+  font-size: 15px;
+  font-weight: 300;
+  color: var(--text-2);
+}
+
+.w-100 { width: 100%; }
+.mx-auto { margin-left: auto; margin-right: auto; }
+
+.row {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 18px;
+  max-width: 1380px;
+  margin: 0 auto;
+}
+
+.broker-card-outer {
+  display: flex;
+}
+
+.broker-card-border {
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: var(--shadow-card);
+  transition: transform .22s ease, box-shadow .22s ease;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.broker-card-outer:hover .broker-card-border {
+  transform: translateY(-5px);
+  box-shadow: var(--shadow-hover);
+}
+
+.broker-card-link {
+  text-decoration: none;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+/* State visual  replaces broker-card-image-upper */
+.state-visual {
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  position: relative;
+  overflow: hidden;
+  flex-shrink: 0;
+  display: block;
+}
+.state-visual svg {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  inset: 0;
+}
+.state-abbr-badge {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Libre Baskerville', serif;
+  font-size: 46px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.16);
+  letter-spacing: -1px;
+  pointer-events: none;
+  user-select: none;
+}
+
+.broker-details {
+  padding: 12px 14px 15px;
+  border-top: 1px solid rgba(0,0,0,0.055);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.card-text-primary {
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--text-1);
+  line-height: 1.3;
+}
+.card-text-secondary {
+  font-size: 12px;
+  font-weight: 300;
+  color: var(--text-2);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.card-text-secondary i {
+  font-size: 9px;
+  opacity: 0.5;
+}
+
+@media (max-width: 560px) {
+  .row { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  body { padding: 28px 12px 48px; }
+  .state-abbr-badge { font-size: 34px; }
+}
+</style>
+</head>
+<body>
+
+<div class="page-title">
+  <h1>Browse by State</h1>
+  <p>Find top-rated mortgage brokers across the United States</p>
+</div>
+
+<div class="w-100 mx-auto row" id="grid"></div>
+
+<script>
+// Visual identity per state: base color, accent, unique pattern type
+const STATES = [
+  { name:"Alabama",        abbr:"AL", capital:"Montgomery",     bg:"#C8102E", ac:"#003087", type:"saltire" },
+  { name:"Alaska",         abbr:"AK", capital:"Juneau",         bg:"#003087", ac:"#FFD700", type:"stars-field" },
+  { name:"Arizona",        abbr:"AZ", capital:"Phoenix",        bg:"#CC2529", ac:"#002868", type:"sunburst" },
+  { name:"Arkansas",       abbr:"AR", capital:"Little Rock",    bg:"#C41E3A", ac:"#002868", type:"triband-h" },
+  { name:"California",     abbr:"CA", capital:"Sacramento",     bg:"#B22234", ac:"#F5A623", type:"stripe-gold" },
+  { name:"Colorado",       abbr:"CO", capital:"Denver",         bg:"#003087", ac:"#BF0A30", type:"target" },
+  { name:"Connecticut",    abbr:"CT", capital:"Hartford",       bg:"#003087", ac:"#C8A951", type:"vines" },
+  { name:"Delaware",       abbr:"DE", capital:"Dover",          bg:"#5B92C6", ac:"#C8A951", type:"diamond-center" },
+  { name:"Florida",        abbr:"FL", capital:"Tallahassee",    bg:"#F47321", ac:"#003DA5", type:"sunburst" },
+  { name:"Georgia",        abbr:"GA", capital:"Atlanta",        bg:"#BA0C2F", ac:"#002868", type:"cross-saltire" },
+  { name:"Hawaii",         abbr:"HI", capital:"Honolulu",       bg:"#003DA5", ac:"#00A550", type:"waves-tropic" },
+  { name:"Idaho",          abbr:"ID", capital:"Boise",          bg:"#003DA5", ac:"#C8A951", type:"solid-badge" },
+  { name:"Illinois",       abbr:"IL", capital:"Springfield",    bg:"#003DA5", ac:"#C41E3A", type:"triband-h" },
+  { name:"Indiana",        abbr:"IN", capital:"Indianapolis",   bg:"#002868", ac:"#C8A951", type:"star-ring" },
+  { name:"Iowa",           abbr:"IA", capital:"Des Moines",     bg:"#003DA5", ac:"#E8E8E8", type:"triband-v" },
+  { name:"Kansas",         abbr:"KS", capital:"Topeka",         bg:"#003DA5", ac:"#F5A623", type:"sunflower-geo" },
+  { name:"Kentucky",       abbr:"KY", capital:"Frankfort",      bg:"#003DA5", ac:"#C8A951", type:"hex-ring" },
+  { name:"Louisiana",      abbr:"LA", capital:"Baton Rouge",    bg:"#002868", ac:"#F5A623", type:"fleur" },
+  { name:"Maine",          abbr:"ME", capital:"Augusta",        bg:"#003DA5", ac:"#006847", type:"pine-geo" },
+  { name:"Maryland",       abbr:"MD", capital:"Annapolis",      bg:"#BF0A30", ac:"#F5A623", type:"quartered" },
+  { name:"Massachusetts",  abbr:"MA", capital:"Boston",         bg:"#003DA5", ac:"#C8A951", type:"solid-badge" },
+  { name:"Michigan",       abbr:"MI", capital:"Lansing",        bg:"#003DA5", ac:"#C8A951", type:"waves-lake" },
+  { name:"Minnesota",      abbr:"MN", capital:"St. Paul",       bg:"#003DA5", ac:"#FFD700", type:"star-ring" },
+  { name:"Mississippi",    abbr:"MS", capital:"Jackson",        bg:"#C41E3A", ac:"#003DA5", type:"cross-saltire" },
+  { name:"Missouri",       abbr:"MO", capital:"Jefferson City", bg:"#C41E3A", ac:"#003DA5", type:"triband-v" },
+  { name:"Montana",        abbr:"MT", capital:"Helena",         bg:"#003DA5", ac:"#C8A951", type:"mountain-geo" },
+  { name:"Nebraska",       abbr:"NE", capital:"Lincoln",        bg:"#003DA5", ac:"#C8A951", type:"waves-plains" },
+  { name:"Nevada",         abbr:"NV", capital:"Carson City",    bg:"#003DA5", ac:"#C8A951", type:"diamond-corner" },
+  { name:"New Hampshire",  abbr:"NH", capital:"Concord",        bg:"#002868", ac:"#C8A951", type:"solid-badge" },
+  { name:"New Jersey",     abbr:"NJ", capital:"Trenton",        bg:"#C8A951", ac:"#003DA5", type:"hex-ring" },
+  { name:"New Mexico",     abbr:"NM", capital:"Santa Fe",       bg:"#FFD700", ac:"#C41E3A", type:"zia" },
+  { name:"New York",       abbr:"NY", capital:"Albany",         bg:"#003DA5", ac:"#C8A951", type:"triband-v" },
+  { name:"North Carolina", abbr:"NC", capital:"Raleigh",        bg:"#C41E3A", ac:"#003DA5", type:"saltire" },
+  { name:"North Dakota",   abbr:"ND", capital:"Bismarck",       bg:"#003DA5", ac:"#C8A951", type:"solid-badge" },
+  { name:"Ohio",           abbr:"OH", capital:"Columbus",       bg:"#C41E3A", ac:"#003DA5", type:"pennant-geo" },
+  { name:"Oklahoma",       abbr:"OK", capital:"Oklahoma City",  bg:"#007DC5", ac:"#C8A951", type:"hex-ring" },
+  { name:"Oregon",         abbr:"OR", capital:"Salem",          bg:"#002868", ac:"#F5A623", type:"target" },
+  { name:"Pennsylvania",   abbr:"PA", capital:"Harrisburg",     bg:"#003DA5", ac:"#C8A951", type:"diamond-center" },
+  { name:"Rhode Island",   abbr:"RI", capital:"Providence",     bg:"#002868", ac:"#FFD700", type:"star-ring" },
+  { name:"South Carolina", abbr:"SC", capital:"Columbia",       bg:"#003DA5", ac:"#FFFFFF", type:"crescent-star" },
+  { name:"South Dakota",   abbr:"SD", capital:"Pierre",         bg:"#003DA5", ac:"#F5A623", type:"sunburst" },
+  { name:"Tennessee",      abbr:"TN", capital:"Nashville",      bg:"#C41E3A", ac:"#003DA5", type:"tristar-geo" },
+  { name:"Texas",          abbr:"TX", capital:"Austin",         bg:"#003DA5", ac:"#BF0A30", type:"lone-star" },
+  { name:"Utah",           abbr:"UT", capital:"Salt Lake City", bg:"#C41E3A", ac:"#FFFFFF", type:"mountain-geo" },
+  { name:"Vermont",        abbr:"VT", capital:"Montpelier",     bg:"#006847", ac:"#C8A951", type:"pine-geo" },
+  { name:"Virginia",       abbr:"VA", capital:"Richmond",       bg:"#003DA5", ac:"#FFFFFF", type:"solid-badge" },
+  { name:"Washington",     abbr:"WA", capital:"Olympia",        bg:"#006847", ac:"#FFFFFF", type:"target" },
+  { name:"West Virginia",  abbr:"WV", capital:"Charleston",     bg:"#002868", ac:"#E8C84A", type:"triband-v" },
+  { name:"Wisconsin",      abbr:"WI", capital:"Madison",        bg:"#003DA5", ac:"#C8A951", type:"cross-saltire" },
+  { name:"Wyoming",        abbr:"WY", capital:"Cheyenne",       bg:"#003DA5", ac:"#C41E3A", type:"stripe-gold" },
+];
+
+const W=200, H=124, cx=100, cy=62;
+
+function dk(hex, n) {
+  return '#'+[1,3,5].map(i=>Math.max(0,parseInt(hex.slice(i,i+2),16)-n).toString(16).padStart(2,'0')).join('');
+}
+function lk(hex, n) {
+  return '#'+[1,3,5].map(i=>Math.min(255,parseInt(hex.slice(i,i+2),16)+n).toString(16).padStart(2,'0')).join('');
+}
+
+function buildSVG({abbr, bg, ac, type}) {
+  let shapes = '';
+
+  switch(type) {
+    case 'saltire':
+      shapes = `<rect width="${W}" height="${H}" fill="${bg}"/>
+        <line x1="0" y1="0" x2="${W}" y2="${H}" stroke="${ac}" stroke-width="30" stroke-opacity="0.28"/>
+        <line x1="${W}" y1="0" x2="0" y2="${H}" stroke="${ac}" stroke-width="30" stroke-opacity="0.28"/>
+        <line x1="0" y1="0" x2="${W}" y2="${H}" stroke="${ac}" stroke-width="10" stroke-opacity="0.5"/>
+        <line x1="${W}" y1="0" x2="0" y2="${H}" stroke="${ac}" stroke-width="10" stroke-opacity="0.5"/>`;
+      break;
+
+    case 'stars-field':
+      shapes = `<rect width="${W}" height="${H}" fill="${bg}"/>`;
+      [[22,18],[55,12],[88,20],[125,14],[162,18],[195,22],[12,40],[42,36],[75,44],[108,32],[140,38],[172,30],[196,42],[28,60],[60,56],[94,64],[128,52],[158,60],[188,58],[18,80],[50,76],[82,84],[115,72],[148,80],[178,76],[35,100],[68,96],[100,104],[133,98],[165,108],[190,94],[48,116],[85,112],[120,120],[155,118]].forEach(([x,y]) => {
+        shapes += `<text x="${x}" y="${y}" font-size="9" fill="${ac}" opacity="0.5" text-anchor="middle" font-family="serif">★</text>`;
+      });
+      break;
+
+    case 'sunburst':
+      shapes = `<rect width="${W}" height="${H}" fill="${bg}"/>`;
+      for(let i=0;i<18;i++){
+        const a=i*20*Math.PI/180;
+        shapes += `<line x1="${cx}" y1="${cy}" x2="${cx+110*Math.cos(a)}" y2="${cy+110*Math.sin(a)}" stroke="${ac}" stroke-width="${i%2?1:2}" stroke-opacity="${i%2?0.15:0.3}"/>`;
+      }
+      shapes += `<circle cx="${cx}" cy="${cy}" r="22" fill="${ac}" opacity="0.3"/>
+                 <circle cx="${cx}" cy="${cy}" r="11" fill="${ac}" opacity="0.45"/>`;
+      break;
+
+    case 'triband-h':
+      shapes = `<rect width="${W}" height="${H}" fill="${dk(bg,15)}"/>
+        <rect y="${H/3}" width="${W}" height="${H/3}" fill="${bg}"/>
+        <rect x="0" y="0" width="${W}" height="${H/3}" fill="${ac}" opacity="0.35"/>
+        <rect x="0" y="${H*2/3}" width="${W}" height="${H/3}" fill="${ac}" opacity="0.35"/>`;
+      break;
+
+    case 'stripe-gold':
+      shapes = `<rect width="${W}" height="${H}" fill="${bg}"/>`;
+      for(let i=0;i<6;i++) shapes += `<rect x="0" y="${i*(H/6)}" width="${W}" height="${H/12}" fill="${ac}" opacity="0.18"/>`;
+      break;
+
+    case 'target':
+      shapes = `<rect width="${W}" height="${H}" fill="${bg}"/>`;
+      [60,46,32,20,10].forEach((r,i) => {
+        shapes += `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${ac}" stroke-width="8" stroke-opacity="${0.1+i*0.07}"/>`;
+      });
+      shapes += `<circle cx="${cx}" cy="${cy}" r="9" fill="${ac}" opacity="0.55"/>`;
+      break;
+
+    case 'vines':
+      shapes = `<rect width="${W}" height="${H}" fill="${bg}"/>`;
+      for(let i=0;i<5;i++){
+        const x=10+i*46;
+        shapes += `<path d="M${x} 0 Q${x+18} ${cy} ${x} ${H}" stroke="${ac}" stroke-width="1.5" fill="none" opacity="0.28"/>
+                   <path d="M${x} 0 Q${x-18} ${cy} ${x} ${H}" stroke="${ac}" stroke-width="1" fill="none" opacity="0.15"/>`;
+      }
+      break;
+
+    case 'diamond-center':
+      shapes = `<rect width="${W}" height="${H}" fill="${bg}"/>`;
+      [64,44,28,14].forEach((h,i) => {
+        shapes += `<polygon points="${cx},${cy-h} ${cx+h*1.3},${cy} ${cx},${cy+h} ${cx-h*1.3},${cy}" fill="${ac}" opacity="${0.1+i*0.06}" stroke="${ac}" stroke-width="0.5" stroke-opacity="0.3"/>`;
+      });
+      break;
+
+    case 'cross-saltire':
+      shapes = `<rect width="${W}" height="${H}" fill="${bg}"/>
+        <line x1="0" y1="0" x2="${W}" y2="${H}" stroke="${ac}" stroke-width="14" stroke-opacity="0.2"/>
+        <line x1="${W}" y1="0" x2="0" y2="${H}" stroke="${ac}" stroke-width="14" stroke-opacity="0.2"/>
+        <rect x="${cx-9}" y="0" width="18" height="${H}" fill="${ac}" opacity="0.32"/>
+        <rect x="0" y="${cy-9}" width="${W}" height="18" fill="${ac}" opacity="0.32"/>`;
+      break;
+
+    case 'waves-tropic':
+      shapes = `<rect width="${W}" height="${H}" fill="${bg}"/>`;
+      for(let i=0;i<6;i++){
+        const y=16+i*20;
+        shapes += `<path d="M0 ${y} Q50 ${y-13} 100 ${y} T200 ${y}" stroke="${ac}" stroke-width="2" fill="none" opacity="${0.12+i*0.04}"/>`;
+      }
+      shapes += `<circle cx="${cx}" cy="${cy}" r="18" fill="${ac}" opacity="0.2"/>`;
+      break;
+
+    case 'solid-badge':
+      shapes = `<rect width="${W}" height="${H}" fill="${bg}"/>
+        <rect x="18" y="12" width="164" height="100" rx="8" fill="${ac}" opacity="0.11"/>
+        <rect x="30" y="22" width="140" height="80" rx="5" fill="none" stroke="${ac}" stroke-width="1.5" stroke-opacity="0.28"/>
+        <rect x="42" y="32" width="116" height="60" rx="3" fill="none" stroke="${ac}" stroke-width="0.8" stroke-opacity="0.16"/>`;
+      break;
+
+    case 'star-ring':
+      shapes = `<rect width="${W}" height="${H}" fill="${bg}"/>`;
+      for(let i=0;i<12;i++){
+        const a=(i*30-90)*Math.PI/180, r=40;
+        shapes += `<text x="${cx+r*Math.cos(a)}" y="${cy+r*Math.sin(a)+5}" font-size="9" fill="${ac}" opacity="0.48" text-anchor="middle" font-family="serif">★</text>`;
+      }
+      shapes += `<circle cx="${cx}" cy="${cy}" r="14" fill="${ac}" opacity="0.3"/>
+                 <circle cx="${cx}" cy="${cy}" r="6" fill="${ac}" opacity="0.4"/>`;
+      break;
+
+    case 'triband-v':
+      shapes = `<rect width="${W}" height="${H}" fill="${bg}"/>
+        <rect x="0" width="${W/3}" height="${H}" fill="${dk(bg,30)}" opacity="0.5"/>
+        <rect x="${W*2/3}" width="${W/3}" height="${H}" fill="${ac}" opacity="0.35"/>`;
+      break;
+
+    case 'sunflower-geo':
+      shapes = `<rect width="${W}" height="${H}" fill="${bg}"/>`;
+      for(let i=0;i<8;i++){
+        const a=i*45*Math.PI/180;
+        const px=cx+32*Math.cos(a), py=cy+32*Math.sin(a);
+        shapes += `<ellipse cx="${px}" cy="${py}" rx="13" ry="5.5" fill="${ac}" opacity="0.32" transform="rotate(${i*45} ${px} ${py})"/>`;
+      }
+      shapes += `<circle cx="${cx}" cy="${cy}" r="13" fill="${ac}" opacity="0.48"/>
+                 <circle cx="${cx}" cy="${cy}" r="6" fill="${bg}" opacity="0.55"/>`;
+      break;
+
+    case 'hex-ring':
+      shapes = `<rect width="${W}" height="${H}" fill="${bg}"/>`;
+      [42,30,18].forEach((r,i) => {
+        const pts = Array.from({length:6},(_,j)=>{const a=j*60*Math.PI/180; return `${cx+r*Math.cos(a)},${cy+r*Math.sin(a)}`;}).join(' ');
+        shapes += `<polygon points="${pts}" fill="${ac}" fill-opacity="${0.06+i*0.04}" stroke="${ac}" stroke-width="2" stroke-opacity="${0.22+i*0.08}"/>`;
+      });
+      shapes += `<circle cx="${cx}" cy="${cy}" r="6" fill="${ac}" opacity="0.5"/>`;
+      break;
+
+    case 'fleur':
+      shapes = `<rect width="${W}" height="${H}" fill="${bg}"/>
+        <path d="M${cx} ${cy-44} C${cx-10} ${cy-28} ${cx-24} ${cy-8} ${cx} ${cy+8} C${cx+24} ${cy-8} ${cx+10} ${cy-28} ${cx} ${cy-44}" fill="${ac}" opacity="0.35"/>
+        <path d="M${cx} ${cy+44} C${cx-10} ${cy+28} ${cx-24} ${cy+8} ${cx} ${cy-8} C${cx+24} ${cy+8} ${cx+10} ${cy+28} ${cx} ${cy+44}" fill="${ac}" opacity="0.25"/>
+        <path d="M${cx-44} ${cy} C${cx-28} ${cy-10} ${cx-8} ${cy-24} ${cx+8} ${cy} C${cx-8} ${cy+24} ${cx-28} ${cy+10} ${cx-44} ${cy}" fill="${ac}" opacity="0.2"/>
+        <path d="M${cx+44} ${cy} C${cx+28} ${cy-10} ${cx+8} ${cy-24} ${cx-8} ${cy} C${cx+8} ${cy+24} ${cx+28} ${cy+10} ${cx+44} ${cy}" fill="${ac}" opacity="0.2"/>
+        <circle cx="${cx}" cy="${cy}" r="8" fill="${ac}" opacity="0.4"/>`;
+      break;
+
+    case 'pine-geo':
+      shapes = `<rect width="${W}" height="${H}" fill="${bg}"/>
+        <polygon points="${cx},${cy-50} ${cx+30},${cy-14} ${cx+20},${cy-14} ${cx+24},${cy+4} ${cx+13},${cy+4} ${cx+16},${cy+28} ${cx-16},${cy+28} ${cx-13},${cy+4} ${cx-24},${cy+4} ${cx-20},${cy-14} ${cx-30},${cy-14}" fill="${ac}" opacity="0.32"/>
+        <rect x="${cx-6}" y="${cy+28}" width="12" height="20" fill="${ac}" opacity="0.28"/>`;
+      break;
+
+    case 'quartered':
+      shapes = `<rect x="0" y="0" width="${cx}" height="${cy}" fill="${bg}"/>
+        <rect x="${cx}" y="0" width="${cx}" height="${cy}" fill="${ac}" opacity="0.85"/>
+        <rect x="0" y="${cy}" width="${cx}" height="${cy}" fill="${ac}" opacity="0.85"/>
+        <rect x="${cx}" y="${cy}" width="${cx}" height="${cy}" fill="${bg}"/>
+        <rect width="${W}" height="${H}" fill="rgba(0,0,0,0.04)"/>`;
+      break;
+
+    case 'waves-lake':
+      shapes = `<rect width="${W}" height="${H}" fill="${bg}"/>`;
+      for(let i=0;i<7;i++){
+        const y=10+i*17;
+        shapes += `<path d="M0,${y} Q25,${y-9} 50,${y} Q75,${y+9} 100,${y} Q125,${y-9} 150,${y} Q175,${y+9} 200,${y}" stroke="${ac}" stroke-width="1.5" fill="none" opacity="${0.1+i*0.03}"/>`;
+      }
+      break;
+
+    case 'mountain-geo':
+      shapes = `<rect width="${W}" height="${H}" fill="${bg}"/>
+        <polygon points="${cx},16 ${cx+52},${H-26} ${cx-52},${H-26}" fill="${lk(bg,20)}" opacity="0.4"/>
+        <polygon points="${cx-28},32 ${cx+14},${H-26} ${cx-70},${H-26}" fill="${dk(bg,10)}" opacity="0.45"/>
+        <polygon points="${cx+38},24 ${cx+82},${H-26} ${cx-6},${H-26}" fill="${ac}" opacity="0.2"/>
+        <rect x="0" y="${H-26}" width="${W}" height="26" fill="${dk(bg,20)}" opacity="0.4"/>`;
+      break;
+
+    case 'waves-plains':
+      shapes = `<rect width="${W}" height="${H}" fill="${bg}"/>`;
+      for(let i=0;i<5;i++){
+        const y0=10+i*24, y1=y0+12;
+        shapes += `<path d="M0,${y0} Q${W/2},${y0-8} ${W},${y0} L${W},${y1} Q${W/2},${y1+8} 0,${y1} Z" fill="${ac}" opacity="${0.06+i*0.025}"/>`;
+      }
+      shapes += `<path d="M0,76 Q${W/2},62 ${W},76 L${W},${H} L0,${H} Z" fill="${dk(bg,20)}" opacity="0.35"/>`;
+      break;
+
+    case 'diamond-corner':
+      shapes = `<rect width="${W}" height="${H}" fill="${bg}"/>`;
+      [[0,0,1,1],[W,0,-1,1],[0,H,1,-1],[W,H,-1,-1]].forEach(([x,y,dx,dy]) => {
+        shapes += `<polygon points="${x},${y} ${x+dx*48},${y} ${x},${y+dy*36}" fill="${ac}" opacity="0.22"/>`;
+      });
+      shapes += `<polygon points="${cx},${cy-30} ${cx+30},${cy} ${cx},${cy+30} ${cx-30},${cy}" fill="${ac}" opacity="0.28"/>`;
+      break;
+
+    case 'zia':
+      shapes = `<rect width="${W}" height="${H}" fill="${bg}"/>`;
+      for(let g=0;g<4;g++){
+        for(let r=0;r<4;r++){
+          const a=(g*90+(r-1.5)*7)*Math.PI/180;
+          const x1=cx+9*Math.cos(a), y1=cy+9*Math.sin(a);
+          const x2=cx+(9+36)*Math.cos(a), y2=cy+(9+36)*Math.sin(a);
+          shapes += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${ac}" stroke-width="4.5" stroke-opacity="0.48" stroke-linecap="round"/>`;
+        }
+      }
+      shapes += `<circle cx="${cx}" cy="${cy}" r="11" fill="${ac}" opacity="0.55"/>
+                 <circle cx="${cx}" cy="${cy}" r="5" fill="${bg}" opacity="0.65"/>`;
+      break;
+
+    case 'pennant-geo':
+      shapes = `<rect width="${W}" height="${H}" fill="${bg}"/>
+        <polygon points="0,0 ${W},${cy} 0,${H}" fill="${ac}" opacity="0.2"/>
+        <polygon points="0,0 ${W*0.5},${cy} 0,${H}" fill="${dk(bg,22)}" opacity="0.5"/>
+        <circle cx="${W*0.24}" cy="${cy}" r="17" fill="${ac}" opacity="0.38"/>
+        <text x="${W*0.24}" y="${cy+6}" font-size="14" fill="${bg}" opacity="0.75" text-anchor="middle" font-family="serif">★</text>`;
+      break;
+
+    case 'crescent-star':
+      shapes = `<rect width="${W}" height="${H}" fill="${bg}"/>
+        <circle cx="${cx+4}" cy="${cy}" r="36" fill="${ac}" opacity="0.3"/>
+        <circle cx="${cx+22}" cy="${cy-5}" r="30" fill="${bg}" opacity="0.95"/>
+        <text x="${cx-18}" y="${cy+8}" font-size="20" fill="${ac}" opacity="0.65" text-anchor="middle" font-family="serif">★</text>`;
+      break;
+
+    case 'tristar-geo':
+      shapes = `<rect width="${W}" height="${H}" fill="${bg}"/>
+        <rect x="0" y="0" width="${W}" height="${H}" fill="${dk(bg,10)}"/>
+        <circle cx="${cx}" cy="${cy}" r="35" fill="${ac}" opacity="0.28"/>
+        <text x="${cx-24}" y="${cy-2}" font-size="17" fill="${bg}" opacity="0.75" text-anchor="middle" font-family="serif">★</text>
+        <text x="${cx+24}" y="${cy-2}" font-size="17" fill="${bg}" opacity="0.75" text-anchor="middle" font-family="serif">★</text>
+        <text x="${cx}" y="${cy+20}" font-size="17" fill="${bg}" opacity="0.75" text-anchor="middle" font-family="serif">★</text>`;
+      break;
+
+    case 'lone-star':
+      shapes = `<rect width="${W}" height="${H}" fill="${bg}"/>
+        <rect x="0" y="0" width="${W*0.36}" height="${H}" fill="${dk(bg,30)}" opacity="0.65"/>
+        <text x="${W*0.18}" y="${cy+20}" font-size="58" fill="${ac}" opacity="0.45" text-anchor="middle" font-family="serif">★</text>
+        <line x1="${W*0.36}" y1="0" x2="${W*0.36}" y2="${H}" stroke="${ac}" stroke-width="1.5" stroke-opacity="0.3"/>`;
+      break;
+
+    default:
+      shapes = `<rect width="${W}" height="${H}" fill="${bg}"/>
+        <circle cx="${cx}" cy="${cy}" r="32" fill="${ac}" opacity="0.25"/>`;
+  }
+
+  // Vignette
+  shapes += `<defs>
+    <radialGradient id="vig_${abbr}" cx="50%" cy="50%" r="70%">
+      <stop offset="0%" stop-color="transparent"/>
+      <stop offset="100%" stop-color="rgba(0,0,0,0.2)"/>
+    </radialGradient>
+  </defs>
+  <rect width="${W}" height="${H}" fill="url(#vig_${abbr})"/>`;
+
+  return `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">${shapes}</svg>`;
+}
+
+const grid = document.getElementById('grid');
+STATES.forEach(s => {
+  const slug = s.name.toLowerCase().replace(/\s+/g, '-');
+  const col = document.createElement('div');
+  col.className = 'broker-card-outer';
+  col.innerHTML = `
+    <div class="broker-card-border">
+      <a class="broker-card-link" href="mortgage-broker/state/${slug}/index.html">
+        <div class="state-visual">
+          ${buildSVG(s)}
+          <div class="state-abbr-badge">${s.abbr}</div>
+        </div>
+        <div class="broker-details">
+          <p class="card-text-primary">${s.name}</p>
+          <p class="card-text-secondary">
+            <i class="fa-solid fa-location-pin"></i>${s.capital}
+          </p>
+        </div>
+      </a>
+    </div>`;
+  grid.appendChild(col);
+});
+</script>
+</body>
+</html>

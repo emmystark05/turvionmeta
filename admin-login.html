@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TurvionMeta  Admin Access</title>
+  <link rel="stylesheet" href="style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+</head>
+
+<style>
+  .admin-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    background: black;
+    padding: 1rem;
+  }
+
+  .admin-card {
+    background: white;
+    border-radius: 16px;
+    width: 100%;
+    max-width: 420px;
+    padding: 2.5rem;
+    box-shadow: 0 20px 60px rgba(16, 104, 235, 0.3);
+  }
+
+  .admin-header {
+    text-align: center;
+    margin-bottom: 2rem;
+  }
+
+  .admin-icon {
+    width: 64px;
+    height: 64px;
+    background: black;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px;
+    margin: 0 auto 1rem;
+    color: white;
+    box-shadow: 0 8px 16px rgba(16, 104, 235, 0.3);
+  }
+
+  .admin-title {
+    font-size: 24px;
+    font-weight: 700;
+    color: #0f172a;
+    margin-bottom: 0.5rem;
+    font-family: 'Syne', sans-serif;
+  }
+
+  .admin-subtitle {
+    font-size: 13px;
+    color: #64748b;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+
+  .form-section {
+    display: grid;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+
+  .input-group label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #0f172a;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+
+  .input-group input {
+    padding: 12px 14px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: 'DM Sans', sans-serif;
+    outline: none;
+    transition: 0.2s;
+  }
+
+  .input-group input:focus {
+    border-color: #1068eb;
+    box-shadow: 0 0 0 3px rgba(16, 104, 235, 0.1);
+  }
+
+  .input-group input::placeholder {
+    color: #64748b;
+  }
+
+  .error-msg {
+    display: none;
+    color: #dc2626;
+    font-size: 12px;
+    padding: 10px 12px;
+    background: rgba(220, 38, 38, 0.1);
+    border: 1px solid rgba(220, 38, 38, 0.2);
+    border-radius: 6px;
+    margin-bottom: 1rem;
+    text-align: center;
+  }
+
+  .success-msg {
+    display: none;
+    color: #059669;
+    font-size: 12px;
+    padding: 10px 12px;
+    background: rgba(5, 150, 105, 0.1);
+    border: 1px solid rgba(5, 150, 105, 0.2);
+    border-radius: 6px;
+    margin-bottom: 1rem;
+    text-align: center;
+  }
+
+  .login-btn {
+    width: 100%;
+    padding: 12px 16px;
+    background: linear-gradient(135deg, #1068eb, #0d47a1);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 700;
+    font-family: 'DM Sans', sans-serif;
+    cursor: pointer;
+    transition: 0.2s;
+    box-shadow: 0 4px 12px rgba(16, 104, 235, 0.3);
+  }
+
+  .login-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(16, 104, 235, 0.4);
+  }
+
+  .login-btn:active {
+    transform: translateY(0);
+  }
+
+  .back-link {
+    display: block;
+    text-align: center;
+    margin-top: 1.5rem;
+    font-size: 13px;
+  }
+
+  .back-link a {
+    color: #1068eb;
+    text-decoration: none;
+    font-weight: 600;
+    font-family: 'IBM Plex Mono', monospace;
+    transition: 0.2s;
+  }
+
+  .back-link a:hover {
+    color: #0d47a1;
+  }
+
+  .warning-box {
+    background: rgba(217, 119, 6, 0.1);
+    border: 1px solid rgba(217, 119, 6, 0.2);
+    border-radius: 8px;
+    padding: 10px 12px;
+    margin-bottom: 1.5rem;
+    font-size: 12px;
+    color: #b45309;
+    text-align: center;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+
+  @media (max-width: 640px) {
+    .admin-card {
+      padding: 2rem 1.5rem;
+    }
+
+    .admin-title {
+      font-size: 20px;
+    }
+  }
+</style>
+
+<body>
+  <div class="admin-container">
+    <div class="admin-card">
+      <div class="admin-header">
+        <div class="admin-title">Admin Access</div>
+        <div class="admin-subtitle">Restricted administration panel</div>
+      </div>
+
+      <div class="warning-box">
+        This area is for authorized administrators only.
+      </div>
+
+      <div id="errorMsg" class="error-msg"></div>
+      <div id="successMsg" class="success-msg"></div>
+
+      <div class="form-section">
+        <div class="input-group">
+          <label for="adminEmail">Admin Email</label>
+          <input
+            id="adminEmail"
+            type="email"
+            placeholder="admin"
+            autocomplete="username"
+          />
+        </div>
+
+        <div class="input-group">
+          <label for="adminPassword">Admin Password</label>
+          <input
+            id="adminPassword"
+            type="password"
+            placeholder="Enter admin password"
+            autocomplete="current-password"
+          />
+        </div>
+      </div>
+
+      <button class="login-btn" onclick="handleAdminLogin()">Unlock Admin Panel</button>
+
+      <div class="back-link">
+        <a href="sign-in.html">← Back to User Login</a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    async function handleAdminLogin() {
+      const email = document.getElementById('adminEmail').value.trim();
+      const password = document.getElementById('adminPassword').value.trim();
+      const errorMsg = document.getElementById('errorMsg');
+      const successMsg = document.getElementById('successMsg');
+
+      errorMsg.style.display = 'none';
+      successMsg.style.display = 'none';
+      errorMsg.textContent = '';
+      successMsg.textContent = '';
+
+      if (!email || !password) {
+        errorMsg.textContent = ' Please enter both email and password';
+        errorMsg.style.display = 'block';
+        return;
+      }
+
+      try {
+        const response = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ email, password }),
+        });
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || 'Invalid admin credentials');
+        }
+
+        if (!data.user?.isAdmin) {
+          throw new Error('Admin access required');
+        }
+
+        successMsg.style.display = 'block';
+        successMsg.textContent = ' Admin verified! Redirecting to admin panel...';
+
+        setTimeout(() => {
+          window.location.href = './admin.html';
+        }, 1000);
+      } catch (error) {
+        errorMsg.textContent = ` ${error.message}`;
+        errorMsg.style.display = 'block';
+        document.getElementById('adminPassword').value = '';
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const emailInput = document.getElementById('adminEmail');
+      const passwordInput = document.getElementById('adminPassword');
+
+      if (emailInput) {
+        emailInput.addEventListener('keypress', (e) => {
+          if (e.key === 'Enter') {
+            passwordInput.focus();
+          }
+        });
+      }
+
+      if (passwordInput) {
+        passwordInput.addEventListener('keypress', (e) => {
+          if (e.key === 'Enter') {
+            handleAdminLogin();
+          }
+        });
+      }
+    });
+  </script>
+</body>
+</html>

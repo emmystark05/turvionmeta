@@ -1,0 +1,1354 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Deriv Portfolio</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Sora:wght@300;400;600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      :root {
+        --bg: #f8fafc;
+        --surface: #fff;
+        --surface-alt: #f9fafb;
+        --border: #e2e8f0;
+        --text: #0f172a;
+        --text-secondary: #475569;
+        --muted: #64748b;
+        --blue: black;
+        --blue-dim: rgba(16, 104, 235, 0.08);
+        --blue-light: rgba(16, 104, 235, 0.12);
+        --blue-dark: #0d47a1;
+        --green: #059669;
+        --green-light: rgba(5, 150, 105, 0.1);
+        --red: #dc2626;
+        --red-light: rgba(220, 38, 38, 0.08);
+        --amber: #d97706;
+        --shadow:
+          0 2px 8px rgba(0, 0, 0, 0.08), 0 4px 16px rgba(16, 104, 235, 0.08);
+        --shadow-lg: 0 8px 24px rgba(16, 104, 235, 0.12);
+        --mono: "IBM Plex Mono", monospace;
+        --sans: "Sora", sans-serif;
+      }
+      body {
+        background: var(--bg);
+        color: var(--text);
+        font-family: var(--sans);
+        font-size: 14px;
+        line-height: 1.6;
+        min-height: 100vh;
+      }
+      nav {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 2rem;
+        height: 56px;
+        background: var(--surface);
+        border-bottom: 1px solid var(--border);
+        position: sticky;
+        top: 0;
+        z-index: 20;
+        box-shadow: var(--shadow);
+      }
+      .logo {
+        font-family: var(--mono);
+        font-size: 13px;
+        font-weight: 700;
+        letter-spacing: 0.12em;
+      }
+      .logo img {
+        height: 28px;
+        width: auto;
+      }
+      .nav-r {
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+      }
+      .nclock {
+        font-family: var(--mono);
+        font-size: 12px;
+        color: var(--muted);
+        font-weight: 500;
+      }
+      .ava {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #1068eb, #0d47a1);
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: var(--mono);
+        font-size: 11px;
+        font-weight: 700;
+      }
+      .logout-btn {
+        font-family: var(--mono);
+        font-size: 11px;
+        color: var(--muted);
+        text-decoration: none;
+        cursor: pointer;
+        padding: 6px 12px;
+        border-radius: 6px;
+        transition: 0.2s;
+        border: 1px solid transparent;
+      }
+      .logout-btn:hover {
+        background: var(--red-light);
+        color: var(--red);
+        border-color: var(--red);
+      }
+      .ticker {
+        background: linear-gradient(135deg, #1068eb, #0d47a1);
+        overflow: hidden;
+        height: 36px;
+        display: flex;
+        align-items: center;
+      }
+      .ttrack {
+        display: flex;
+        gap: 3rem;
+        animation: scroll 35s linear infinite;
+        white-space: nowrap;
+        padding-left: 2rem;
+      }
+      .titem {
+        font-family: var(--mono);
+        font-size: 12px;
+        color: rgba(255, 255, 255, 0.8);
+        display: flex;
+        gap: 0.6rem;
+      }
+      .titem .ts {
+        color: #fff;
+        font-weight: 700;
+      }
+      .tup {
+        color: #86efac;
+      }
+      .tdn {
+        color: #fca5a5;
+      }
+      @keyframes scroll {
+        from {
+          transform: translateX(0);
+        }
+        to {
+          transform: translateX(-50%);
+        }
+      }
+      main {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 2rem;
+        display: grid;
+        gap: 2rem;
+      }
+      .srow {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.2rem;
+      }
+      .sc {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 1.5rem;
+        box-shadow: var(--shadow);
+        transition: 0.3s;
+      }
+      .sc:hover {
+        border-color: #1068eb;
+        box-shadow: var(--shadow-lg);
+      }
+      .slbl {
+        font-size: 11px;
+        color: var(--muted);
+        font-family: var(--mono);
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        margin-bottom: 0.8rem;
+        font-weight: 600;
+      }
+      .sval {
+        font-family: var(--mono);
+        font-size: 24px;
+        font-weight: 700;
+        color: var(--text);
+      }
+      .ssub {
+        font-size: 13px;
+        color: var(--text-secondary);
+      }
+      .up {
+        color: var(--green);
+      }
+      .dn {
+        color: var(--red);
+      }
+      .csbar {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 1.2rem;
+        display: flex;
+        align-items: center;
+        gap: 0.8rem;
+        flex-wrap: wrap;
+        box-shadow: var(--shadow);
+      }
+      .cslbl {
+        font-family: var(--mono);
+        font-size: 11px;
+        color: var(--muted);
+        text-transform: uppercase;
+        margin-right: 0.5rem;
+      }
+      .cbtn {
+        font-family: var(--mono);
+        font-size: 12px;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 7px 14px;
+        background: var(--surface-alt);
+        cursor: pointer;
+        color: var(--muted);
+        transition: 0.2s;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-weight: 500;
+      }
+      .cbtn .cd {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+      }
+      .cbtn.active {
+        background: #1068eb;
+        border-color: #1068eb;
+        color: #fff;
+      }
+      .cbtn:not(.active):hover {
+        border-color: #1068eb;
+        background: var(--blue-light);
+      }
+      .cgrid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+        gap: 1.5rem;
+      }
+      .ccard {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        overflow: hidden;
+        box-shadow: var(--shadow);
+        transition: 0.3s;
+      }
+      .ccard:hover {
+        box-shadow: var(--shadow-lg);
+        border-color: #1068eb;
+      }
+      .chdr {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 1rem 1.2rem;
+        border-bottom: 1px solid var(--border);
+        background: var(--surface-alt);
+      }
+      .chl {
+        display: flex;
+        align-items: center;
+        gap: 0.8rem;
+      }
+      .cbadge {
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: var(--mono);
+        font-size: 13px;
+        font-weight: 700;
+      }
+      .cname {
+        font-size: 14px;
+        font-weight: 700;
+      }
+      .cpair {
+        font-family: var(--mono);
+        font-size: 11px;
+        color: var(--muted);
+      }
+      .chr {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+      }
+      .cprice {
+        font-family: var(--mono);
+        font-size: 18px;
+        font-weight: 700;
+      }
+      .exbtn {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        background: var(--bg);
+        border: 1px solid var(--border);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: 0.2s;
+        color: var(--muted);
+        font-size: 14px;
+      }
+      .exbtn:hover {
+        background: var(--blue-light);
+        border-color: #1068eb;
+        color: #1068eb;
+      }
+      .cwrap {
+        position: relative;
+        height: 200px;
+        background: linear-gradient(180deg, #fafcff 0%, #f0f4fb 100%);
+      }
+      canvas.cc {
+        width: 100%;
+        height: 100%;
+        display: block;
+      }
+      .cftr {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.8rem 1.2rem;
+        border-top: 1px solid var(--border);
+        background: var(--surface-alt);
+      }
+      .tfbtns {
+        display: flex;
+        gap: 4px;
+      }
+      .tfb {
+        font-family: var(--mono);
+        font-size: 10px;
+        padding: 5px 10px;
+        border-radius: 5px;
+        border: 1px solid var(--border);
+        background: none;
+        color: var(--muted);
+        cursor: pointer;
+        font-weight: 500;
+      }
+      .tfb.active {
+        background: #1068eb;
+        border-color: #1068eb;
+        color: #fff;
+        font-weight: 700;
+      }
+      .tfb:not(.active):hover {
+        border-color: #1068eb;
+        background: var(--blue-light);
+      }
+      .vol {
+        font-family: var(--mono);
+        font-size: 11px;
+        color: var(--muted);
+      }
+      .atable {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        overflow: hidden;
+        box-shadow: var(--shadow);
+      }
+      .ahdr {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 1.2rem 1.5rem;
+        border-bottom: 1px solid var(--border);
+        background: var(--surface-alt);
+      }
+      .atitle {
+        font-family: var(--mono);
+        font-size: 13px;
+        font-weight: 700;
+      }
+      .ldot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--green);
+        display: inline-block;
+        margin-right: 8px;
+        animation: blink 2.5s ease-in-out infinite;
+      }
+      @keyframes blink {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.4;
+        }
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      th {
+        font-family: var(--mono);
+        font-size: 11px;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        padding: 1rem 1.5rem;
+        text-align: left;
+        border-bottom: 1px solid var(--border);
+        font-weight: 700;
+      }
+      th:not(:first-child) {
+        text-align: right;
+      }
+      td {
+        padding: 1rem 1.5rem;
+        border-bottom: 1px solid var(--border);
+        font-family: var(--mono);
+        font-size: 13px;
+      }
+      td:not(:first-child) {
+        text-align: right;
+      }
+      tr:last-child td {
+        border-bottom: none;
+      }
+      tr:hover td {
+        background: var(--blue-dim);
+      }
+      .crow {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .cion {
+        width: 32px;
+        height: 32px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 13px;
+        font-weight: 700;
+      }
+      .cn {
+        font-size: 13px;
+        font-weight: 700;
+      }
+      .cs {
+        font-size: 11px;
+        color: var(--muted);
+      }
+      .movl {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.85);
+        z-index: 200;
+        align-items: center;
+        justify-content: center;
+        backdrop-filter: blur(6px);
+      }
+      .movl.open {
+        display: flex;
+      }
+      .mbox {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 18px;
+        width: 93vw;
+        max-width: 1200px;
+        height: 88vh;
+        display: flex;
+        flex-direction: column;
+        box-shadow: var(--shadow-lg);
+      }
+      .mhdr {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 1.2rem 1.6rem;
+        border-bottom: 1px solid var(--border);
+        flex-shrink: 0;
+        background: var(--surface-alt);
+      }
+      .mleft {
+        display: flex;
+        align-items: center;
+        gap: 0.9rem;
+      }
+      .mbadge {
+        width: 40px;
+        height: 40px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: var(--mono);
+        font-size: 14px;
+        font-weight: 700;
+        color: #fff;
+      }
+      .mright {
+        display: flex;
+        align-items: center;
+        gap: 1.6rem;
+      }
+      .mohlc {
+        display: flex;
+        gap: 1rem;
+        font-family: var(--mono);
+        font-size: 12px;
+        color: var(--muted);
+      }
+      .mohlc span b {
+        color: var(--text);
+        font-weight: 700;
+      }
+      .mbody {
+        flex: 1;
+        position: relative;
+        min-height: 0;
+        background: linear-gradient(180deg, #fafcff 0%, #f0f4fb 100%);
+      }
+      canvas#mcanvas {
+        width: 100%;
+        height: 100%;
+        display: block;
+      }
+      .mftr {
+        display: flex;
+        gap: 0.6rem;
+        padding: 1rem 1.6rem;
+        border-top: 1px solid var(--border);
+        flex-shrink: 0;
+        align-items: center;
+        background: var(--surface-alt);
+      }
+      .mtfb {
+        font-family: var(--mono);
+        font-size: 11px;
+        padding: 6px 14px;
+        border-radius: 6px;
+        border: 1px solid var(--border);
+        background: none;
+        color: var(--muted);
+        cursor: pointer;
+        transition: 0.2s;
+        font-weight: 500;
+      }
+      .mtfb.active {
+        background: #1068eb;
+        border-color: #1068eb;
+        color: #fff;
+        font-weight: 700;
+      }
+      .mtfb:not(.active):hover {
+        border-color: #1068eb;
+        background: var(--blue-light);
+      }
+      .xcbtn {
+        width: 34px;
+        height: 34px;
+        border-radius: 8px;
+        background: var(--bg);
+        border: 1px solid var(--border);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 16px;
+        color: var(--muted);
+        transition: 0.2s;
+      }
+      .xcbtn:hover {
+        background: var(--red-light);
+        color: var(--red);
+        border-color: var(--red);
+      }
+      .add-coin-btn {
+        background: #1068eb;
+        color: #fff;
+        border: none;
+        border-radius: 8px;
+        padding: 8px 16px;
+        cursor: pointer;
+        font-family: var(--mono);
+        font-size: 12px;
+        font-weight: 600;
+        transition: 0.2s;
+      }
+      .add-coin-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(16, 104, 235, 0.3);
+      }
+      .modal-input {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        margin: 5px 0 10px;
+        font-family: var(--mono);
+        font-size: 12px;
+      }
+      .modal-btn {
+        padding: 8px 16px;
+        border: none;
+        border-radius: 6px;
+        font-family: var(--mono);
+        font-weight: 600;
+        cursor: pointer;
+        transition: 0.2s;
+      }
+      .modal-btn.primary {
+        background: #1068eb;
+        color: #fff;
+      }
+      .modal-btn.primary:hover {
+        background: #0d47a1;
+      }
+      .modal-btn.secondary {
+        background: var(--border);
+        color: var(--text);
+      }
+      .modal-btn.secondary:hover {
+        background: #d1d5db;
+      }
+      @media (max-width: 900px) {
+        main {
+          padding: 1.5rem 1rem;
+        }
+        .cgrid {
+          grid-template-columns: 1fr;
+        }
+      }
+      @media (max-width: 640px) {
+        .srow {
+          grid-template-columns: 1fr;
+        }
+        .chdr {
+          flex-wrap: wrap;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="movl" id="modal">
+      <div class="mbox">
+        <div class="mhdr">
+          <div class="mleft">
+            <div class="mbadge" id="mbadge"></div>
+            <div>
+              <div style="font-weight: 700; font-size: 15px" id="mname"></div>
+              <div
+                style="
+                  font-family: var(--mono);
+                  font-size: 11px;
+                  color: var(--muted);
+                "
+                id="mpair"
+              ></div>
+            </div>
+          </div>
+          <div class="mright">
+            <div>
+              <div
+                style="
+                  font-family: var(--mono);
+                  font-size: 20px;
+                  font-weight: 700;
+                "
+                id="mprice"
+              ></div>
+              <div
+                style="
+                  font-family: var(--mono);
+                  font-size: 12px;
+                  font-weight: 600;
+                "
+                id="mchg"
+              ></div>
+            </div>
+            <div class="mohlc">
+              <span>O <b id="mo"></b></span><span>H <b id="mh"></b></span
+              ><span>L <b id="ml"></b></span><span>C <b id="mc"></b></span>
+            </div>
+            <button class="xcbtn" onclick="closeModal()">✕</button>
+          </div>
+        </div>
+        <div class="mbody"><canvas id="mcanvas"></canvas></div>
+        <div class="mftr">
+          <span
+            style="
+              font-family: var(--mono);
+              font-size: 11px;
+              color: var(--muted);
+              margin-right: 0.3rem;
+            "
+            >TF:</span
+          ><button class="mtfb active" data-tf="1m" onclick="setMTF(this)">
+            1m</button
+          ><button class="mtfb" data-tf="5m" onclick="setMTF(this)">5m</button
+          ><button class="mtfb" data-tf="15m" onclick="setMTF(this)">15m</button
+          ><button class="mtfb" data-tf="1H" onclick="setMTF(this)">1H</button
+          ><button class="mtfb" data-tf="4H" onclick="setMTF(this)">4H</button
+          ><button class="mtfb" data-tf="1D" onclick="setMTF(this)">1D</button>
+        </div>
+      </div>
+    </div>
+
+    <nav>
+      <span class="logo"
+        ><img alt="Deriv" src="./images/logo.png" style="height: 60px;"
+      /></span>
+      <div class="nav-r">
+        <span class="nclock" id="clock">--:--:--</span>
+        <div class="ava" id="userAva">JD</div>
+        <a href="./sign-in.html" class="logout-btn" onclick="logout()"
+          >Logout</a
+        >
+      </div>
+    </nav>
+
+    <div class="ticker"><div class="ttrack" id="ttrack"></div></div>
+
+    <main>
+      <div class="srow">
+        <div class="sc">
+          <div class="slbl">Portfolio Value</div>
+          <div class="sval" id="pval">$0</div>
+          <div class="ssub up" id="pchange">▲ $0 today</div>
+        </div>
+        <div class="sc">
+          <div class="slbl">24h Change</div>
+          <div class="sval up" id="p24h">+0.00%</div>
+          <div class="ssub" style="color: var(--muted)">Since yesterday</div>
+        </div>
+        <div class="sc">
+          <div class="slbl">Best Performer</div>
+          <div class="sval" style="color: #1068eb" id="bestPerf"></div>
+          <div class="ssub up" id="bestPerfChg">▲ 0.00%</div>
+        </div>
+        <div class="sc">
+          <div class="slbl">Positions</div>
+          <div class="sval" id="posCount">0</div>
+          <div class="ssub" style="color: var(--muted)">Active coins</div>
+        </div>
+      </div>
+
+      <div class="csbar" id="coinBar"></div>
+
+      <div class="cgrid" id="cgrid"></div>
+
+      <div class="atable">
+        <div class="ahdr">
+          <span class="atitle"><span class="ldot"></span>My Holdings</span
+          ><span
+            style="
+              font-family: var(--mono);
+              font-size: 11px;
+              color: var(--muted);
+              font-weight: 500;
+            "
+            >Live • <span id="ucount">0</span></span
+          >
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Asset</th>
+              <th>Price</th>
+              <th>Holdings</th>
+              <th>Value</th>
+              <th>24h</th>
+              <th>Allocation</th>
+            </tr>
+          </thead>
+          <tbody id="atbody"></tbody>
+        </table>
+      </div>
+    </main>
+
+    <script>
+      const COINS = {
+        BTC: {
+          name: "Bitcoin",
+          color: "#f7931a",
+          bg: "rgba(247,147,26,.12)",
+          sym: "₿",
+          base: 67420,
+          vol: 500,
+        },
+        ETH: {
+          name: "Ethereum",
+          color: "#627eea",
+          bg: "rgba(98,126,234,.12)",
+          sym: "Ξ",
+          base: 3510,
+          vol: 35,
+        },
+        USDT: {
+          name: "Tether",
+          color: "#26a17b",
+          bg: "rgba(38,161,123,.12)",
+          sym: "₮",
+          base: 1.0002,
+          vol: 0.0004,
+        },
+        BNB: {
+          name: "BNB",
+          color: "#f3ba2f",
+          bg: "rgba(243,186,47,.12)",
+          sym: "B",
+          base: 594,
+          vol: 7,
+        },
+        SOL: {
+          name: "Solana",
+          color: "#9945ff",
+          bg: "rgba(153,69,255,.12)",
+          sym: "◎",
+          base: 172,
+          vol: 2.5,
+        },
+        XRP: {
+          name: "Ripple",
+          color: "rgb(255,68,79)",
+          bg: "rgba(255,68,79,.12)",
+          sym: "✕",
+          base: 0.621,
+          vol: 0.007,
+        },
+        ADA: {
+          name: "Cardano",
+          color: "#0033ad",
+          bg: "rgba(0,51,173,.12)",
+          sym: "A",
+          base: 0.584,
+          vol: 0.006,
+        },
+        DOGE: {
+          name: "Dogecoin",
+          color: "#c2a633",
+          bg: "rgba(194,166,51,.12)",
+          sym: "Ð",
+          base: 0.168,
+          vol: 0.003,
+        },
+        AVAX: {
+          name: "Avalanche",
+          color: "#e84142",
+          bg: "rgba(232,65,66,.12)",
+          sym: "A",
+          base: 38.9,
+          vol: 0.5,
+        },
+        LINK: {
+          name: "Chainlink",
+          color: "#2a5ada",
+          bg: "rgba(42,90,218,.12)",
+          sym: "⬡",
+          base: 14.2,
+          vol: 0.25,
+        },
+      };
+      let prices = {},
+        cdata = {},
+        activeCoins = [],
+        userHoldings = {},
+        currentUser = null,
+        portfolioTotalValue = 0,
+        modalKey = null,
+        modalTF = "1m",
+        isAdmin = false;
+      Object.keys(COINS).forEach((k) => {
+        prices[k] = COINS[k].base;
+        cdata[k] = {};
+        ["1m", "5m", "15m", "1H", "4H", "1D"].forEach((tf) => {
+          cdata[k][tf] = genCandles(COINS[k].base, COINS[k].vol, 70);
+        });
+      });
+
+      function genCandles(base, vol, n) {
+        const arr = [];
+        let p = base * (0.96 + Math.random() * 0.06);
+        for (let i = 0; i < n; i++) {
+          const o = p,
+            m = (Math.random() - 0.47) * vol * 2.2,
+            c = Math.max(o + m, base * 0.75);
+          arr.push({
+            o,
+            h: Math.max(o, c) + Math.random() * vol * 0.5,
+            l: Math.min(o, c) - Math.random() * vol * 0.5,
+            c,
+            v: 0.4 + Math.random() * 2.2,
+          });
+          p = c;
+        }
+        return arr;
+      }
+
+      window.addEventListener("load", async () => {
+        try {
+          const authRes = await fetch('/api/auth/me');
+          if (!authRes.ok) throw new Error('Please log in first');
+          const authData = await authRes.json();
+          if (!authData.user) throw new Error('Please log in first');
+
+          currentUser = authData.user;
+          isAdmin = currentUser.isAdmin;
+          const initials = currentUser.fullName
+            .split(' ')
+            .map((n) => n[0])
+            .join('')
+            .toUpperCase();
+          document.getElementById('userAva').textContent = initials;
+
+          const portfolioRes = await fetch('/api/portfolio');
+          if (!portfolioRes.ok) throw new Error('Unable to load portfolio');
+          const portfolioData = await portfolioRes.json();
+          portfolioTotalValue = Number(portfolioData.portfolio.totalValue || 0);
+          userHoldings = {};
+          Object.keys(COINS).forEach((key) => {
+            userHoldings[key] = Number(portfolioData.portfolio[key] || 0);
+          });
+
+          activeCoins = Object.keys(userHoldings).filter(
+            (k) => userHoldings[k] > 0,
+          );
+          buildCoinBar();
+          renderCharts();
+          buildAssets();
+          buildTicker();
+        } catch (error) {
+          alert(error.message || 'Authentication required');
+          window.location.href = './sign-in.html';
+        }
+      });
+
+      function buildCoinBar() {
+        const bar = document.getElementById("coinBar");
+        let html = '<span class="cslbl">Charts:</span>';
+        Object.keys(COINS).forEach((k) => {
+          const active = activeCoins.includes(k);
+          html += `<button class="cbtn ${active ? "active" : ""}" data-coin="${k}" onclick="toggleChart('${k}',this)"><span class="cd" style="background:${COINS[k].bg};color:${COINS[k].color}">${COINS[k].sym}</span>${k}</button>`;
+        });
+        html += `<button class="add-coin-btn" onclick="showAddCoinModal()">+ Add Coin</button>`;
+        bar.innerHTML = html;
+      }
+
+      function showAddCoinModal() {
+        const modal = document.createElement("div");
+        modal.className = "movl open";
+        modal.id = "addCoinModal";
+        modal.innerHTML = `<div class="mbox" style="max-width:400px;height:auto"><div class="mhdr"><span class="atitle">Add New Coin</span><button class="xcbtn" onclick="document.getElementById('addCoinModal').remove()">✕</button></div><div style="padding:1.5rem;display:grid;gap:1rem"><div><label style="font-family:var(--mono);font-size:11px;text-transform:uppercase;margin-bottom:.5rem;display:block">Select Coin:</label><select id="coinSelect" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;font-family:var(--mono)">${Object.keys(
+          COINS,
+        )
+          .map((k) => `<option value="${k}">${COINS[k].name} (${k})</option>`)
+          .join(
+            "",
+          )}</select></div><div><label style="font-family:var(--mono);font-size:11px;text-transform:uppercase;margin-bottom:.5rem;display:block">Quantity:</label><input type="number" id="qtyInput" class="modal-input" placeholder="Enter amount" min="0" step="any"/></div><div style="display:flex;gap:.8rem"><button class="modal-btn secondary" onclick="document.getElementById('addCoinModal').remove()">Cancel</button><button class="modal-btn primary" onclick="addCoin()">Add Coin</button></div></div></div>`;
+        document.body.appendChild(modal);
+      }
+
+      async function addCoin() {
+        const coin = document.getElementById("coinSelect").value;
+        const qty = parseFloat(document.getElementById("qtyInput").value);
+        if (!qty || qty <= 0) {
+          alert("Please enter a valid quantity");
+          return;
+        }
+        userHoldings[coin] = (userHoldings[coin] || 0) + qty;
+        document.getElementById("addCoinModal").remove();
+        activeCoins = Object.keys(userHoldings).filter(
+          (k) => userHoldings[k] > 0,
+        );
+        buildCoinBar();
+        renderCharts();
+        buildAssets();
+        await saveCurrentPortfolio();
+        updatePortfolio();
+      }
+
+      function toggleChart(key, btn) {
+        if (activeCoins.includes(key)) {
+          activeCoins = activeCoins.filter((k) => k !== key);
+          btn.classList.remove("active");
+        } else {
+          activeCoins.push(key);
+          btn.classList.add("active");
+        }
+        renderCharts();
+      }
+
+      function fmtP(v, k) {
+        if (v >= 1000)
+          return "$" + v.toLocaleString("en-US", { maximumFractionDigits: 0 });
+        if (v >= 10) return "$" + v.toFixed(2);
+        if (v >= 1) return "$" + v.toFixed(4);
+        return "$" + v.toFixed(5);
+      }
+
+      const canvases = {};
+      function renderCharts() {
+        const grid = document.getElementById("cgrid");
+        grid.innerHTML = "";
+        activeCoins.forEach((k) => {
+          const c = COINS[k];
+          const card = document.createElement("div");
+          card.className = "ccard";
+          card.dataset.key = k;
+          card.innerHTML = `<div class="chdr"><div class="chl"><div class="cbadge" style="background:${c.bg};color:${c.color}">${c.sym}</div><div><div class="cname">${c.name}</div><div class="cpair">${k}/USD</div></div></div><div class="chr"><div><div class="cprice up" id="cp-${k}">${fmtP(prices[k], k)}</div><div class="cchg" id="cc-${k}"></div></div><button class="exbtn" onclick="openModal('${k}')" title="Expand chart">⤢</button></div></div><div class="cwrap"><canvas class="cc" id="cv-${k}"></canvas></div><div class="cftr"><div class="tfbtns">${["1m", "5m", "15m", "1H", "4H", "1D"].map((tf) => `<button class="tfb ${tf === "1m" ? "active" : ""}" data-tf="${tf}" onclick="setChartTF(this,'${k}')">${tf}</button>`).join("")}</div><span class="vol" id="cv2-${k}">Vol:</span></div>`;
+          grid.appendChild(card);
+          card
+            .querySelectorAll(".tfb")
+            .forEach((b) =>
+              b.addEventListener("click", () => setChartTF(b, k)),
+            );
+          canvases[k] = card.querySelector(`#cv-${k}`);
+        });
+      }
+
+      function setChartTF(btn, coin) {
+        const card = btn.closest(".ccard");
+        card
+          .querySelectorAll(".tfb")
+          .forEach((b) => b.classList.remove("active"));
+        btn.classList.add("active");
+        const cv = canvases[coin];
+        if (cv && cv.offsetWidth)
+          drawCandleChart(cv, coin, true, btn.dataset.tf);
+      }
+
+      function drawCandleChart(canvas, key, compact, tf = "1m") {
+        const dpr = window.devicePixelRatio || 1;
+        const W = canvas.offsetWidth,
+          H = canvas.offsetHeight;
+        if (!W || !H) return;
+        canvas.width = W * dpr;
+        canvas.height = H * dpr;
+        const ctx = canvas.getContext("2d");
+        ctx.scale(dpr, dpr);
+        const data = cdata[key][tf] || [];
+        const n = Math.min(data.length, compact ? 44 : 90);
+        const vis = data.slice(-n);
+        const chartH = compact ? H * 0.7 : H * 0.74,
+          volH = H - chartH - (compact ? 3 : 6);
+        let hi = -Infinity,
+          lo = Infinity;
+        vis.forEach((c) => {
+          hi = Math.max(hi, c.h);
+          lo = Math.min(lo, c.l);
+        });
+        const pad = (hi - lo) * 0.08 || hi * 0.002;
+        hi += pad;
+        lo -= pad;
+        const pr = hi - lo || 0.001;
+        let mv = 0;
+        vis.forEach((c) => {
+          if (c.v > mv) mv = c.v;
+        });
+        const cw = (W - 6) / n,
+          bw = Math.max(cw * 0.58, 1.5);
+        const py = (p) => chartH - ((p - lo) / pr) * chartH;
+        const vy = (v) => H - (v / mv) * volH * 0.88;
+        ctx.strokeStyle = "rgba(16,104,235,.06)";
+        ctx.lineWidth = 0.5;
+        for (let i = 0; i <= 4; i++) {
+          const y = (chartH / 4) * i;
+          ctx.beginPath();
+          ctx.moveTo(0, y);
+          ctx.lineTo(W, y);
+          ctx.stroke();
+        }
+        vis.forEach((c, i) => {
+          const x = 3 + i * cw + cw / 2,
+            up = c.c >= c.o;
+          const col = up ? "#059669" : "#dc2626";
+          ctx.strokeStyle = col;
+          ctx.lineWidth = 0.9;
+          ctx.beginPath();
+          ctx.moveTo(x, py(c.h));
+          ctx.lineTo(x, py(c.l));
+          ctx.stroke();
+          const top = py(Math.max(c.o, c.c)),
+            bot = py(Math.min(c.o, c.c));
+          ctx.fillStyle = col;
+          ctx.fillRect(x - bw / 2, top, bw, Math.max(bot - top, 1.5));
+          ctx.fillStyle = up ? "rgba(5,150,105,.3)" : "rgba(220,38,38,.3)";
+          const vt = vy(c.v);
+          ctx.fillRect(x - bw / 2, vt, bw, H - vt);
+        });
+        const lp = vis[vis.length - 1].c,
+          lpy = py(lp);
+        ctx.strokeStyle = "rgba(16,104,235,.5)";
+        ctx.lineWidth = 0.8;
+        ctx.setLineDash([4, 3]);
+        ctx.beginPath();
+        ctx.moveTo(0, lpy);
+        ctx.lineTo(W, lpy);
+        ctx.stroke();
+        ctx.setLineDash([]);
+      }
+
+      function buildAssets() {
+        const tb = document.getElementById("atbody");
+        tb.innerHTML = "";
+        let totalVal = 0;
+        Object.keys(userHoldings).forEach((k) => {
+          if (!userHoldings[k]) return;
+          const c = COINS[k],
+            h = userHoldings[k],
+            val = prices[k] * h;
+          totalVal += val;
+          const op = cdata[k]["1m"][0]?.o || prices[k],
+            chg = ((prices[k] - op) / op) * 100;
+          const row = document.createElement("tr");
+          row.innerHTML = `<td><div class="crow"><div class="cion" style="background:${c.bg};color:${c.color}">${c.sym}</div><div><div class="cn">${c.name}</div><div class="cs">${k}</div></div></div></td><td id="ap-${k}">${fmtP(prices[k], k)}</td><td>${h.toLocaleString("en-US", { maximumFractionDigits: 5 })}</td><td id="av-${k}">$${val.toLocaleString("en-US", { maximumFractionDigits: 0 })}</td><td class="${chg >= 0 ? "up" : "dn"}" id="ac-${k}">${chg >= 0 ? "+" : ""}${chg.toFixed(2)}%</td><td><span style="font-family:var(--mono);font-size:11px;color:var(--muted)"></span></td>`;
+          tb.appendChild(row);
+        });
+        document.getElementById("ucount").textContent = Object.keys(
+          userHoldings,
+        ).filter((k) => userHoldings[k] > 0).length;
+      }
+
+      async function saveCurrentPortfolio() {
+        try {
+          const computedTotal = Object.keys(userHoldings).reduce((sum, key) => {
+            return sum + (COINS[key] ? prices[key] * (userHoldings[key] || 0) : 0);
+          }, 0);
+          const payload = {
+            ...userHoldings,
+            totalValue: portfolioTotalValue || computedTotal,
+          };
+          await fetch('/api/portfolio', {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(payload),
+          });
+        } catch (error) {
+          console.warn('Unable to save portfolio:', error);
+        }
+      }
+
+      function buildTicker() {
+        const keys = Object.keys(COINS);
+        let h = "";
+        for (let r = 0; r < 2; r++)
+          keys.forEach((k) => {
+            h += `<span class="titem"><span class="ts">${k}</span><span id="tk-${k}-${r}">${fmtP(prices[k], k)}</span><span class="tup" id="tkc-${k}-${r}">+0.00%</span></span>`;
+          });
+        document.getElementById("ttrack").innerHTML = h;
+      }
+
+      function openModal(key) {
+        modalKey = key;
+        const c = COINS[key];
+        document.getElementById("mbadge").textContent = c.sym;
+        document.getElementById("mbadge").style.background = c.bg;
+        document.getElementById("mbadge").style.color = c.color;
+        document.getElementById("mname").textContent = c.name;
+        document.getElementById("mpair").textContent = `${key}/USD`;
+        document.getElementById("modal").classList.add("open");
+        setTimeout(() => drawModal(), 50);
+      }
+
+      function closeModal() {
+        document.getElementById("modal").classList.remove("open");
+        modalKey = null;
+      }
+
+      function setMTF(btn) {
+        document
+          .querySelectorAll(".mtfb")
+          .forEach((b) => b.classList.remove("active"));
+        btn.classList.add("active");
+        modalTF = btn.dataset.tf;
+        drawModal();
+      }
+
+      function drawModal() {
+        if (!modalKey) return;
+        const canvas = document.getElementById("mcanvas");
+        drawCandleChart(canvas, modalKey, false, modalTF);
+        const arr = cdata[modalKey][modalTF] || [];
+        const last = arr[arr.length - 1],
+          lp = prices[modalKey];
+        const op = arr[0]?.o || lp,
+          chg = ((lp - op) / op) * 100;
+        document.getElementById("mprice").textContent = fmtP(lp, modalKey);
+        document.getElementById("mprice").className = chg >= 0 ? "up" : "dn";
+        document.getElementById("mchg").textContent =
+          (chg >= 0 ? "▲ +" : "▼ ") + chg.toFixed(3) + "%";
+        document.getElementById("mchg").className = chg >= 0 ? "up" : "dn";
+        document.getElementById("mo").textContent = fmtP(last.o, modalKey);
+        document.getElementById("mh").textContent = fmtP(last.h, modalKey);
+        document.getElementById("ml").textContent = fmtP(last.l, modalKey);
+        document.getElementById("mc").textContent = fmtP(last.c, modalKey);
+      }
+
+      function tick() {
+        document.getElementById("clock").textContent = new Date()
+          .toTimeString()
+          .slice(0, 8);
+      }
+
+      function updatePortfolio() {
+        if (isAdmin) return;
+        let totalVal = 0;
+        Object.keys(userHoldings).forEach((k) => {
+          totalVal += prices[k] * (userHoldings[k] || 0);
+        });
+        activeCoins.forEach((k) => {
+          const cv = canvases[k];
+          if (cv && cv.offsetWidth)
+            drawCandleChart(
+              cv,
+              k,
+              true,
+              document.querySelector(`[data-key="${k}"] .tfb.active`)?.dataset
+                .tf || "1m",
+            );
+          const lp = prices[k],
+            op = cdata[k]["1m"][0]?.o || lp,
+            chg = ((lp - op) / op) * 100;
+          const pe = document.getElementById(`cp-${k}`);
+          if (pe) {
+            pe.textContent = fmtP(lp, k);
+            pe.className = "cprice " + (chg >= 0 ? "up" : "dn");
+          }
+          const ce = document.getElementById(`cc-${k}`);
+          if (ce) {
+            ce.textContent = (chg >= 0 ? "▲ +" : "▼ ") + chg.toFixed(2) + "%";
+            ce.className = "cchg " + (chg >= 0 ? "up" : "dn");
+          }
+          const ve = document.getElementById(`cv2-${k}`);
+          const arr = cdata[k]["1m"];
+          if (ve)
+            ve.textContent = "Vol:" + arr[arr.length - 1].v.toFixed(2) + "K";
+        });
+        if (modalKey) drawModal();
+        if (fr % 5 === 0) {
+          Object.keys(COINS).forEach((k) => {
+            const lp = prices[k],
+              op = cdata[k]["1m"][0]?.o || lp,
+              chg = ((lp - op) / op) * 100,
+              cls = chg >= 0 ? "tup" : "tdn";
+            for (let r = 0; r < 2; r++) {
+              const pe = document.getElementById(`tk-${k}-${r}`);
+              const ce = document.getElementById(`tkc-${k}-${r}`);
+              if (pe) pe.textContent = fmtP(lp, k);
+              if (ce) {
+                ce.textContent = (chg >= 0 ? "+" : "") + chg.toFixed(2) + "%";
+                ce.className = cls;
+              }
+            }
+          });
+        }
+        if (fr % 10 === 0) {
+          Object.keys(userHoldings).forEach((k) => {
+            if (!userHoldings[k]) return;
+            const h = userHoldings[k],
+              lp = prices[k],
+              val = lp * h;
+            const op = cdata[k]["1m"][0]?.o || lp,
+              chg = ((lp - op) / op) * 100;
+            const ap = document.getElementById(`ap-${k}`);
+            const av = document.getElementById(`av-${k}`);
+            const ac = document.getElementById(`ac-${k}`);
+            if (ap) ap.textContent = fmtP(lp, k);
+            if (av)
+              av.textContent =
+                "$" + val.toLocaleString("en-US", { maximumFractionDigits: 0 });
+            if (ac) {
+              ac.textContent = (chg >= 0 ? "+" : "") + chg.toFixed(2) + "%";
+              ac.className = chg >= 0 ? "up" : "dn";
+            }
+          });
+          const displayValue = portfolioTotalValue || totalVal;
+          document.getElementById("pval").textContent =
+            "$" +
+            displayValue.toLocaleString("en-US", { maximumFractionDigits: 0 });
+        }
+      }
+
+      function tickAll() {
+        if (isAdmin) return;
+        Object.keys(COINS).forEach((k) => {
+          const c = COINS[k],
+            arr = cdata[k]["1m"],
+            last = arr[arr.length - 1];
+          const np = Math.max(
+            last.c + (Math.random() - 0.485) * c.vol * 1.3,
+            c.base * 0.65,
+          );
+          last.c = np;
+          last.h = Math.max(last.h, np);
+          last.l = Math.min(last.l, np);
+          last.v += 0.015;
+          if (Math.random() < 0.08) {
+            arr.push({ o: np, h: np, l: np, c: np, v: 0.08 });
+            if (arr.length > 130) arr.shift();
+          }
+          prices[k] = np;
+        });
+      }
+
+      tick();
+      setInterval(tick, 1000);
+      let fr = 0;
+      setInterval(() => {
+        fr++;
+        tickAll();
+        updatePortfolio();
+      }, 500);
+
+      async function logout() {
+        try {
+          await fetch('/api/auth/logout', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          });
+        } catch (error) {
+          console.warn('Logout failed:', error);
+        }
+        window.location.href = './sign-in.html';
+      }
+
+      document.getElementById("modal").addEventListener("click", (e) => {
+        if (e.target === document.getElementById("modal")) closeModal();
+      });
+    </script>
+  </body>
+</html>

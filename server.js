@@ -145,10 +145,6 @@ app.use(session({
 }));
 
 // ─── Database (untouched) ─────────────────────────────────────────────────────
-const db = new sqlite3.Database(path.join(__dirname, 'app.db'), (err) => {
-  if (err) { console.error('Database connection failed:', err); }
-  else     { console.log('✓ Connected to SQLite database'); initializeDatabase(); }
-});
 
 function initializeDatabase() {
   db.serialize(() => {

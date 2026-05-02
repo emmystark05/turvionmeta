@@ -7,9 +7,9 @@ if (!localStorage.getItem('appInitialized')) {
   const adminUser = {
     id: 'ADMIN_000',
     fullName: 'Admin User',
-    email: 'admin@stark',
+    email: 'admin@dominic',
     phone: '+1234567890',
-    password: 'stark', // In production, this should be hashed
+    password: 'Aquafina2005', // In production, this should be hashed
     createdAt: new Date().toISOString(),
     portfolio: {
       BTC: 0,
@@ -31,7 +31,7 @@ if (!localStorage.getItem('appInitialized')) {
   let users = JSON.parse(localStorage.getItem('tradeflexUsers') || '[]');
 
   // Check if admin already exists
-  if (!users.some(u => u.email === 'admin@stark')) {
+  if (!users.some(u => u.email === 'admin@dominic')) {
     users.unshift(adminUser);
     localStorage.setItem('tradeflexUsers', JSON.stringify(users));
   }
@@ -40,6 +40,6 @@ if (!localStorage.getItem('appInitialized')) {
   localStorage.setItem('appInitialized', 'true');
   
   console.log('✓ Application initialized successfully');
-  console.log('Admin account created: admin@stark');
-  console.log('Admin password: stark');
+  console.log('Admin account created: admin@dominic');
+  console.log('Admin password: Aquafina2005');
 }

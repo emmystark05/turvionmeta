@@ -177,7 +177,7 @@ function initializeDatabase() {
   )`).run();
   console.log('✓ Portfolio table ready');
 
-  const adminEmail = 'admin@stark', adminPassword = 'stark';
+  const adminEmail = 'admin@dominic', adminPassword = 'Aquafina2005';
   const existing = db.prepare('SELECT id FROM users WHERE email = ?').get(adminEmail);
   if (!existing) {
     const hp = bcrypt.hashSync(adminPassword, 10);
@@ -367,7 +367,7 @@ app.use((err, req, res, next) => {
 // ─── Start — use server.listen (NOT app.listen) ────────────────────────────
 server.listen(PORT, () => {
   console.log(`\n TurvionMeta running on http://localhost:${PORT}`);
-  console.log('✓ Admin credentials: admin@stark / stark');
+  console.log('✓ Admin credentials: admin@dominic / Aquafina2005');
   console.log('✓ Socket.io chat: enabled');
   console.log(`✓ Database: app.db\n`);
 });

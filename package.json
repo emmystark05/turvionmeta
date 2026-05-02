@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Broker Platform Backend",
   "main": "server.js",
-"scripts": {
+  "scripts": {
     "dev": "node server.js",
     "build": "echo 'No build needed'",
     "start": "node server.js"
@@ -22,7 +22,7 @@
     "express": "^4.19.2",
     "express-session": "^1.17.3",
     "socket.io": "^4.8.3",
-    "sqlite3": "^5.1.6",
+    "sqlite3": "^6.0.1",
     "uuid": "^14.0.0"
   }
 }

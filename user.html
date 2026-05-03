@@ -960,7 +960,8 @@
           const active = activeCoins.includes(k);
           html += `<button class="cbtn ${active ? "active" : ""}" data-coin="${k}" onclick="toggleChart('${k}',this)"><span class="cd" style="background:${COINS[k].bg};color:${COINS[k].color}">${COINS[k].sym}</span>${k}</button>`;
         });
-        html += `<button class="add-coin-btn" onclick="showAddCoinModal()">+ Add Coin</button>`;
+        // html += `<button class="add-coin-btn" onclick="showAddCoinModal()">+ Add Coin</button>`;
+        html += ``;
         bar.innerHTML = html;
       }
 
